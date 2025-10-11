@@ -210,6 +210,29 @@ export function fieldAsUint32(field: ProtoField): number {
   return field.value >>> 0;
 }
 
+export type EnumValueMap<T extends string | number> = Record<
+  number,
+  Exclude<T, number>
+>;
+
+export function fieldAsEnum<T extends string | number>(
+  field: ProtoField,
+  enumValueMap: EnumValueMap<T>,
+): T | number {
+  if (field.type !== "Varint") {
+    throw new SyntaxError(`Expected Varint field, got ${field.type}`);
+  }
+  if (typeof field.value === "bigint") {
+    throw new SyntaxError("Varint too large (more than 32 bits)");
+  }
+  const value = field.value >>> 0;
+  const enumValue = enumValueMap[value];
+  if (enumValue == null) {
+    return value;
+  }
+  return enumValue;
+}
+
 export type FieldAsStringOptions = {
   validate?: boolean | undefined;
 };

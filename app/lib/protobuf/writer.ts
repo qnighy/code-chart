@@ -104,6 +104,19 @@ export class ProtoWriter {
     this.writeVarintField(fieldNumber, value >>> 0);
   }
 
+  writeEnumField<T extends string | number>(
+    fieldNumber: number,
+    value: T,
+    enumMap: EnumNameMap<T>,
+  ): void {
+    const numberValue =
+      typeof value === "number" ? value : enumMap[value as Exclude<T, number>];
+    if (numberValue === 0) {
+      return;
+    }
+    this.writeVarintField(fieldNumber, numberValue);
+  }
+
   writeStringField(fieldNumber: number, value: string): void {
     if (value === "") {
       return;
@@ -121,3 +134,8 @@ export class ProtoWriter {
     this.writeLenField(fieldNumber, bytes);
   }
 }
+
+export type EnumNameMap<T extends string | number> = Record<
+  Exclude<T, number>,
+  number
+>;

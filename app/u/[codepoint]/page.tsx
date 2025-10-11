@@ -92,6 +92,10 @@ export default async function CodepointPage({
               <dt className="font-medium">Code Point:</dt>
               <dd className="font-mono">U+{normalized}</dd>
 
+              {/* General Category */}
+              <dt className="font-medium">General Category:</dt>
+              <dd className="font-mono">{entry?.generalCategory}</dd>
+
               <dt className="font-medium">Decimal:</dt>
               <dd className="font-mono">{cp}</dd>
 
