@@ -1,6 +1,9 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { parseCPNumber, formatCPNumber } from "../cp-number";
+
 import { ArbitraryText } from "../../ArbitraryText";
+import { parseCPNumber, formatCPNumber } from "../cp-number";
 
 interface PageProps {
   params: Promise<{
@@ -30,6 +33,10 @@ export default async function CodepointPage({ params }: PageProps) {
   // Get the character from the code point
   const character = String.fromCodePoint(cp);
 
+  // Calculate adjacent code points
+  const prevCp = cp > 0 ? cp - 1 : null;
+  const nextCp = cp < 0x10FFFF ? cp + 1 : null;
+
   return (
     <div className="min-h-screen p-8 font-sans">
       <main className="max-w-4xl mx-auto">
@@ -37,12 +44,39 @@ export default async function CodepointPage({ params }: PageProps) {
           U+{normalized}
         </h1>
         
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-12 mb-8 text-center">
-          <div className="text-9xl mb-4">
-            <ArbitraryText>
-              {character}
-            </ArbitraryText>
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          {prevCp !== null ? (
+            <Link
+              href={`/u/${formatCPNumber(prevCp)}`}
+              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Previous character"
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </Link>
+          ) : (
+            <div className="w-12 h-12" />
+          )}
+          
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-12 text-center min-w-[400px]">
+            <div className="text-9xl">
+              <ArbitraryText>
+                {character}
+              </ArbitraryText>
+            </div>
           </div>
+          
+          {nextCp !== null ? (
+            <Link
+              href={`/u/${formatCPNumber(nextCp)}`}
+              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Next character"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </Link>
+          ) : (
+            <div className="w-12 h-12" />
+          )}
         </div>
 
         <div className="space-y-4">

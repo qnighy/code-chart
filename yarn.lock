@@ -2052,6 +2052,7 @@ __metadata:
     eslint: "npm:^9.37.0"
     eslint-config-next: "npm:^15.5.4"
     jiti: "npm:^2.6.1"
+    lucide-react: "npm:^0.545.0"
     next: "npm:^15.5.4"
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
@@ -3890,6 +3891,15 @@ __metadata:
   version: 10.4.3
   resolution: "lru-cache@npm:10.4.3"
   checksum: 10c0/ebd04fbca961e6c1d6c0af3799adcc966a1babe798f685bb84e6599266599cd95d94630b10262f5424539bc4640107e8a33aa28585374abf561d30d16f4b39fb
+  languageName: node
+  linkType: hard
+
+"lucide-react@npm:^0.545.0":
+  version: 0.545.0
+  resolution: "lucide-react@npm:0.545.0"
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/942622c8e5d113e6fc6f66407703dc06474cf1a36ee9998b9f562f2e64737ea098c0db5a4e5ba2a8eb14abecb9da05be4584e9400c4a192ba5b2781f21928c21
   languageName: node
   linkType: hard
 
