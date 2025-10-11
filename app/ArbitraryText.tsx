@@ -6,7 +6,7 @@
 
 "use client";
 
-import { ReactElement, useEffect, useState } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 
 export type ArbitraryTextProps = {
   children: string;
