@@ -96,4 +96,28 @@ export class ProtoWriter {
       this._buf = newBuf;
     }
   }
+
+  writeUint32Field(fieldNumber: number, value: number): void {
+    if (value === 0) {
+      return;
+    }
+    this.writeVarintField(fieldNumber, value >>> 0);
+  }
+
+  writeStringField(fieldNumber: number, value: string): void {
+    if (value === "") {
+      return;
+    }
+    const bytes = new TextEncoder().encode(value);
+    this.writeLenField(fieldNumber, bytes);
+  }
+
+  writeSubmessageField<T>(
+    fieldNumber: number,
+    message: T,
+    encode: (message: T) => Uint8Array,
+  ): void {
+    const bytes = encode(message);
+    this.writeLenField(fieldNumber, bytes);
+  }
 }

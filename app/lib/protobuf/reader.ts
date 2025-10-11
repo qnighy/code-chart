@@ -199,3 +199,45 @@ export type ProtoI64Field = {
   type: "I64";
   value: Uint8Array;
 };
+
+export function fieldAsUint32(field: ProtoField): number {
+  if (field.type !== "Varint") {
+    throw new SyntaxError(`Expected Varint field, got ${field.type}`);
+  }
+  if (typeof field.value === "bigint") {
+    throw new SyntaxError("Varint too large (more than 32 bits)");
+  }
+  return field.value >>> 0;
+}
+
+export type FieldAsStringOptions = {
+  validate?: boolean | undefined;
+};
+export function fieldAsString(
+  field: ProtoField,
+  options: FieldAsStringOptions = {},
+): string {
+  const { validate = true } = options;
+  if (field.type !== "Len") {
+    throw new SyntaxError(`Expected Len field, got ${field.type}`);
+  }
+  const decoder = new TextDecoder("utf-8", { fatal: validate });
+  try {
+    return decoder.decode(field.value);
+  } catch (e) {
+    if (e instanceof TypeError) {
+      throw new SyntaxError("Invalid UTF-8 string");
+    }
+    throw e;
+  }
+}
+
+export function fieldAsSubmessage<T>(
+  field: ProtoField,
+  decode: (buf: Uint8Array) => T,
+): T {
+  if (field.type !== "Len") {
+    throw new SyntaxError(`Expected Len field, got ${field.type}`);
+  }
+  return decode(field.value);
+}

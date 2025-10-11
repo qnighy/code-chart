@@ -14,12 +14,31 @@ export function chunkNameOf(chunkIndex: number): string {
 export type ChunkData = {
   /**
    * Index of the chunk (0-based)
+   *
+   * ```protobuf
+   * uint32 chunk_index = 1;
+   * ```
    */
   chunkIndex: number;
+  /**
+   * ```protobuf
+   * repeated CharacterData characters = 2;
+   * ```
+   */
   characters: CharacterData[];
 };
 
 export type CharacterData = {
+  /**
+   * ```protobuf
+   * uint32 code_point = 1;
+   * ```
+   */
   codePoint: number;
+  /**
+   * ```protobuf
+   * string name = 2;
+   * ```
+   */
   name: string;
 };
