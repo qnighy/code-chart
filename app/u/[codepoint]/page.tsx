@@ -7,6 +7,7 @@ import { parseCPNumber, formatCPNumber } from "../cp-number";
 import { CharacterDisplay } from "./CharacterDisplay";
 import { chunks } from "../../shared";
 import { chunkIndexOf } from "../../lib/ucd/chunk";
+import { deriveCharacterData } from "../../lib/ucd/derived-data";
 
 interface PageProps {
   params: Promise<{
@@ -37,6 +38,7 @@ export default async function CodepointPage({
 
   const chunk = await chunks.getChunk(chunkIndexOf(cp));
   const entry = chunk.characters.find((c) => c.codePoint === cp);
+  const charData = deriveCharacterData(cp, entry);
 
   // Get the character from the code point
   const character = String.fromCodePoint(cp);
@@ -49,7 +51,7 @@ export default async function CodepointPage({
     <div className="min-h-screen p-8 font-sans">
       <main className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">
-          U+{normalized} {entry?.name}
+          U+{normalized} {charData.name}
         </h1>
 
         {/* Navigation Buttons */}
@@ -94,7 +96,7 @@ export default async function CodepointPage({
 
               {/* General Category */}
               <dt className="font-medium">General Category:</dt>
-              <dd className="font-mono">{entry?.generalCategory}</dd>
+              <dd className="font-mono">{charData.generalCategory}</dd>
 
               <dt className="font-medium">Decimal:</dt>
               <dd className="font-mono">{cp}</dd>
