@@ -2,8 +2,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { ArbitraryText } from "../../ArbitraryText";
 import { parseCPNumber, formatCPNumber } from "../cp-number";
+import { CharacterDisplay } from "./CharacterDisplay";
 
 interface PageProps {
   params: Promise<{
@@ -59,11 +59,9 @@ export default async function CodepointPage({ params }: PageProps) {
           )}
           
           <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 sm:p-12 text-center min-w-[200px] sm:min-w-[400px] min-h-[200px] sm:min-h-[300px] flex items-center justify-center">
-            <div className="text-6xl sm:text-9xl overflow-hidden">
-              <ArbitraryText>
-                {character}
-              </ArbitraryText>
-            </div>
+            <CharacterDisplay
+              codePoint={cp}
+            />
           </div>
           
           {nextCp !== null ? (
