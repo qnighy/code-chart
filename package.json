@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "yarn generate && yarn build:next",
+    "build:next": "next build",
     "fmt": "prettier -w .",
     "fmt:check": "prettier -c .",
     "generate": "node --import jiti/register ./app/lib/ucd/generate.ts",
