@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
-    "/.*": ["./public/data/**/*"],
+    "/u/\\[codepoint\\]": ["./public/data/**/*"],
   },
 };
 
