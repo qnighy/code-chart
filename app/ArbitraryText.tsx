@@ -15,7 +15,7 @@ export type ArbitraryTextProps = {
 export function ArbitraryText(props: ArbitraryTextProps): ReactElement | null {
   const { children } = props;
   const [hydrated, setHydrated] = useState(false);
-  
+
   useEffect(() => {
     setHydrated(true);
   }, []);
@@ -50,6 +50,6 @@ function escapeText(text: string): string {
 
   return text.replace(
     /[\u0000-\u0008\u000B\u000D-\u001F\u007F-\u009F\uD800-\uDFFF\p{Noncharacter_Code_Point}]/gu,
-    ""
+    "",
   );
 }

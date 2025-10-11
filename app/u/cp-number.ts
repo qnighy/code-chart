@@ -23,7 +23,7 @@ export function parseCPNumber(text: string): CPNumber | null {
  * @param cp A code point number.
  */
 export function formatCPNumber(cp: CPNumber): string {
-  if(!Number.isInteger(cp)) {
+  if (!Number.isInteger(cp)) {
     throw new TypeError("Code point must be an integer");
   }
   if (!(0 <= cp && cp < 0x110000)) {

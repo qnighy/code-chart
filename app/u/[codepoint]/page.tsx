@@ -35,15 +35,13 @@ export default async function CodepointPage({ params }: PageProps) {
 
   // Calculate adjacent code points
   const prevCp = cp > 0 ? cp - 1 : null;
-  const nextCp = cp < 0x10FFFF ? cp + 1 : null;
+  const nextCp = cp < 0x10ffff ? cp + 1 : null;
 
   return (
     <div className="min-h-screen p-8 font-sans">
       <main className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">
-          U+{normalized}
-        </h1>
-        
+        <h1 className="text-4xl font-bold mb-8">U+{normalized}</h1>
+
         {/* Navigation Buttons */}
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8">
           {prevCp !== null ? (
@@ -57,13 +55,11 @@ export default async function CodepointPage({ params }: PageProps) {
           ) : (
             <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
           )}
-          
+
           <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 sm:p-12 text-center min-w-[200px] sm:min-w-[400px] min-h-[200px] sm:min-h-[300px] flex items-center justify-center">
-            <CharacterDisplay
-              codePoint={cp}
-            />
+            <CharacterDisplay codePoint={cp} />
           </div>
-          
+
           {nextCp !== null ? (
             <Link
               href={`/u/${formatCPNumber(nextCp)}`}
@@ -79,37 +75,41 @@ export default async function CodepointPage({ params }: PageProps) {
 
         <div className="space-y-4">
           <div className="border-b pb-4">
-            <h2 className="text-xl font-semibold mb-2">Character Information</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              Character Information
+            </h2>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
               <dt className="font-medium">Code Point:</dt>
               <dd className="font-mono">U+{normalized}</dd>
-              
+
               <dt className="font-medium">Decimal:</dt>
               <dd className="font-mono">{cp}</dd>
-              
+
               <dt className="font-medium">Character:</dt>
               <dd className="text-2xl">{character}</dd>
-              
+
               <dt className="font-medium">UTF-8:</dt>
               <dd className="font-mono">
                 {Array.from(new TextEncoder().encode(character))
-                  .map(b => b.toString(16).toUpperCase().padStart(2, "0"))
+                  .map((b) => b.toString(16).toUpperCase().padStart(2, "0"))
                   .join(" ")}
               </dd>
-              
+
               <dt className="font-medium">UTF-16:</dt>
               <dd className="font-mono">
                 {Array.from(character)
-                  .flatMap(c => {
+                  .flatMap((c) => {
                     const code = c.charCodeAt(0);
-                    if (code >= 0xD800 && code <= 0xDBFF) {
+                    if (code >= 0xd800 && code <= 0xdbff) {
                       // High surrogate
                       const low = character.charCodeAt(1);
                       return [code, low];
                     }
                     return [code];
                   })
-                  .map(code => code.toString(16).toUpperCase().padStart(4, "0"))
+                  .map((code) =>
+                    code.toString(16).toUpperCase().padStart(4, "0"),
+                  )
                   .join(" ")}
               </dd>
             </dl>
