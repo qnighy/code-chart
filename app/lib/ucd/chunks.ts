@@ -1,6 +1,7 @@
 import { publicFetch } from "@qnighy/internal-public-fetch";
 
 import { chunkNameOf, type ChunkData } from "./chunk.ts";
+import { decodeChunkData } from "./chunk-protobuf.ts";
 
 /**
  * In the code chart, the Unicode Character Database (UCD) is reorganized and
@@ -36,7 +37,7 @@ export class Chunks {
         `Failed to fetch chunk ${chunkIndex}: ${resp.status} ${resp.statusText}`,
       );
     }
-    return (await resp.json()) as ChunkData;
+    return decodeChunkData(await resp.bytes());
   }
 
   #evictChunks() {

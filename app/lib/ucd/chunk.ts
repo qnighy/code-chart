@@ -8,7 +8,7 @@ export function chunkIndexOf(codePoint: number): number {
 }
 
 export function chunkNameOf(chunkIndex: number): string {
-  return `chunk${CHUNK_SIZE}-${chunkIndex.toString().padStart(4, "0")}.json`;
+  return `chunk${CHUNK_SIZE}-${chunkIndex.toString().padStart(4, "0")}.binpb`;
 }
 
 export type ChunkData = {

@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 
 import { chunkNameOf, type ChunkData } from "./chunk.ts";
+import { decodeChunkData, encodeChunkData } from "./chunk-protobuf.ts";
 
 /**
  * In the code chart, the Unicode Character Database (UCD) is reorganized and
@@ -76,8 +77,8 @@ export class WritableChunks {
   async #readChunk(chunkIndex: number): Promise<ChunkData> {
     const filePath = this.#chunkPath(chunkIndex);
     try {
-      const text = await fs.readFile(filePath, "utf-8");
-      return JSON.parse(text) as ChunkData;
+      const bin = await fs.readFile(filePath);
+      return decodeChunkData(bin);
     } catch (error) {
       // Handle NOENT
       if (
@@ -92,8 +93,8 @@ export class WritableChunks {
 
   async #writeChunk(chunkIndex: number, chunk: ChunkData): Promise<void> {
     const filePath = this.#chunkPath(chunkIndex);
-    const text = JSON.stringify(chunk);
-    await fs.writeFile(filePath, text, "utf-8");
+    const bin = encodeChunkData(chunk);
+    await fs.writeFile(filePath, bin);
   }
 
   _releaseChunk(chunkIndex: number): void {
