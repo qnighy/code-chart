@@ -1,3 +1,5 @@
+import type { CharacterData } from "./character-data";
+
 /**
  * The number of code points, including those unassigned, in each chunk.
  */
@@ -26,19 +28,4 @@ export type ChunkData = {
    * ```
    */
   characters: CharacterData[];
-};
-
-export type CharacterData = {
-  /**
-   * ```protobuf
-   * uint32 code_point = 1;
-   * ```
-   */
-  codePoint: number;
-  /**
-   * ```protobuf
-   * string name = 2;
-   * ```
-   */
-  name: string;
 };
