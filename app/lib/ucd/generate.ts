@@ -12,7 +12,7 @@ export async function generateUCDChunks() {
   const ucd = new UCD("16.0.0");
   await ucd.init();
 
-  await fs.rmdir(outputPath, { recursive: true });
+  await fs.rm(outputPath, { recursive: true });
 
   const chunks = new WritableChunks(outputPath);
 

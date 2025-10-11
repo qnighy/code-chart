@@ -126,7 +126,7 @@ export class WritableChunks {
 
     for (const chunkIndex of this.#chunks.keys()) {
       const state = this.#chunks.get(chunkIndex);
-      if (state == null || state.rc > 0) {
+      if (state == null || state.rc > 0 || state.io != null) {
         continue;
       }
       this.#evictChunk(chunkIndex, state);
@@ -166,12 +166,16 @@ export class WritableChunks {
     while (cont) {
       cont = false;
       let awaited = false;
-      for (const [, state] of this.#chunks) {
+      for (const [chunkIndex, state] of this.#chunks) {
         if (state.io != null) {
           awaited = true;
           cont = true;
           await state.io;
         } else if (state.rc > 0) {
+          cont = true;
+        } else if (state.dirty) {
+          this.#evictChunk(chunkIndex, state);
+          awaited = true;
           cont = true;
         }
       }
