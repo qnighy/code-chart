@@ -45,21 +45,21 @@ export default async function CodepointPage({ params }: PageProps) {
         </h1>
         
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-center gap-4 mb-8">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8">
           {prevCp !== null ? (
             <Link
               href={`/u/${formatCPNumber(prevCp)}`}
-              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
               aria-label="Previous character"
             >
-              <ChevronLeft className="w-8 h-8" />
+              <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
             </Link>
           ) : (
-            <div className="w-12 h-12" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
           )}
           
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-12 text-center min-w-[400px] min-h-[300px] flex items-center justify-center">
-            <div className="text-9xl">
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 sm:p-12 text-center min-w-[200px] sm:min-w-[400px] min-h-[200px] sm:min-h-[300px] flex items-center justify-center">
+            <div className="text-6xl sm:text-9xl overflow-hidden">
               <ArbitraryText>
                 {character}
               </ArbitraryText>
@@ -69,13 +69,13 @@ export default async function CodepointPage({ params }: PageProps) {
           {nextCp !== null ? (
             <Link
               href={`/u/${formatCPNumber(nextCp)}`}
-              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
               aria-label="Next character"
             >
-              <ChevronRight className="w-8 h-8" />
+              <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
             </Link>
           ) : (
-            <div className="w-12 h-12" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
           )}
         </div>
 
