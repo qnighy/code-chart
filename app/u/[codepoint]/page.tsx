@@ -58,7 +58,7 @@ export default async function CodepointPage({ params }: PageProps) {
             <div className="w-12 h-12" />
           )}
           
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-12 text-center min-w-[400px]">
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-12 text-center min-w-[400px] min-h-[300px] flex items-center justify-center">
             <div className="text-9xl">
               <ArbitraryText>
                 {character}
