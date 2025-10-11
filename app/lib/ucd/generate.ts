@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { UCD } from "./handle";
 import { WritableChunks } from "./writable-chunks";
-import { chunkIndexOf } from "./chunks";
+import { chunkIndexOf } from "./chunk";
 
 const dirname = new URL(".", import.meta.url).pathname;
 
@@ -17,7 +17,6 @@ export async function generateUCDChunks() {
   const chunks = new WritableChunks(outputPath);
 
   for await (const row of ucd.unicodeData()) {
-    console.log(row);
     const chunk = await chunks.openChunk(chunkIndexOf(row.codePoint));
     try {
       chunk.data.characters ??= [];

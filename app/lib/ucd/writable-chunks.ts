@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 
-import type { ChunkData } from "./chunks.ts";
+import type { ChunkData } from "./chunk.ts";
 
 /**
  * In the code chart, the Unicode Character Database (UCD) is reorganized and
