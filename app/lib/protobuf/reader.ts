@@ -1,3 +1,12 @@
+import {
+  WIRE_END_GROUP,
+  WIRE_I32,
+  WIRE_I64,
+  WIRE_LEN,
+  WIRE_START_GROUP,
+  WIRE_VARINT,
+} from "./common";
+
 export class ProtoReader implements IterableIterator<ProtoField> {
   private _buf: Uint8Array;
   private _pos: number;
@@ -148,13 +157,6 @@ export class ProtoReader implements IterableIterator<ProtoField> {
     return this._buf[this._pos++];
   }
 }
-
-const WIRE_VARINT = 0;
-const WIRE_LEN = 2;
-const WIRE_START_GROUP = 3;
-const WIRE_END_GROUP = 4;
-const WIRE_I32 = 5;
-const WIRE_I64 = 1;
 
 export type ProtoField =
   | ProtoVarintField
