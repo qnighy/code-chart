@@ -23,8 +23,18 @@ export default async function CodepointPage({
   // Parse the codepoint
   const cp = parseCPNumber(codepoint);
 
-  // Return 404 if the codepoint is invalid
-  if (cp === null) {
+  if (cp == null) {
+    // If parsing failed, check if it's a single character
+    const codepoints = Array.from(decodeURIComponent(codepoint));
+    if (codepoints.length === 1) {
+      // If it's a single character, redirect to its codepoint page
+      const charCp = codepoints[0].codePointAt(0);
+      if (charCp != null) {
+        redirect(`/u/${formatCPNumber(charCp)}`);
+      }
+    }
+
+    // Return 404 if the codepoint is invalid
     notFound();
   }
 
