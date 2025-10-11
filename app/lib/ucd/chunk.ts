@@ -7,6 +7,10 @@ export function chunkIndexOf(codePoint: number): number {
   return Math.floor(codePoint / CHUNK_SIZE);
 }
 
+export function chunkNameOf(chunkIndex: number): string {
+  return `chunk${CHUNK_SIZE}-${chunkIndex.toString().padStart(4, "0")}.json`;
+}
+
 export type ChunkData = {
   /**
    * Index of the chunk (0-based)

@@ -1,9 +1,12 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import type { ReactElement } from "react";
 
 import { parseCPNumber, formatCPNumber } from "../cp-number";
 import { CharacterDisplay } from "./CharacterDisplay";
+import { chunks } from "../../shared";
+import { chunkIndexOf } from "../../lib/ucd/chunk";
 
 interface PageProps {
   params: Promise<{
@@ -11,7 +14,9 @@ interface PageProps {
   }>;
 }
 
-export default async function CodepointPage({ params }: PageProps) {
+export default async function CodepointPage({
+  params,
+}: PageProps): Promise<ReactElement | null> {
   const { codepoint } = await params;
 
   // Parse the codepoint
@@ -30,6 +35,9 @@ export default async function CodepointPage({ params }: PageProps) {
     redirect(`/u/${normalized}`);
   }
 
+  const chunk = await chunks.getChunk(chunkIndexOf(cp));
+  const entry = chunk.characters.find((c) => c.codePoint === cp);
+
   // Get the character from the code point
   const character = String.fromCodePoint(cp);
 
@@ -40,7 +48,9 @@ export default async function CodepointPage({ params }: PageProps) {
   return (
     <div className="min-h-screen p-8 font-sans">
       <main className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">U+{normalized}</h1>
+        <h1 className="text-4xl font-bold mb-8">
+          U+{normalized} {entry?.name}
+        </h1>
 
         {/* Navigation Buttons */}
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8">

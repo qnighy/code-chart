@@ -832,6 +832,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@qnighy/internal-public-fetch@workspace:*, @qnighy/internal-public-fetch@workspace:packages/public-fetch":
+  version: 0.0.0-use.local
+  resolution: "@qnighy/internal-public-fetch@workspace:packages/public-fetch"
+  languageName: unknown
+  linkType: soft
+
 "@rollup/rollup-android-arm-eabi@npm:4.52.4":
   version: 4.52.4
   resolution: "@rollup/rollup-android-arm-eabi@npm:4.52.4"
@@ -2069,6 +2075,7 @@ __metadata:
   resolution: "code-chart@workspace:."
   dependencies:
     "@eslint/eslintrc": "npm:^3.3.1"
+    "@qnighy/internal-public-fetch": "workspace:*"
     "@tailwindcss/postcss": "npm:^4.1.14"
     "@types/adm-zip": "npm:^0.5.7"
     "@types/node": "npm:^24.7.0"

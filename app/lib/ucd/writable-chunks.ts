@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 
-import type { ChunkData } from "./chunk.ts";
+import { chunkNameOf, type ChunkData } from "./chunk.ts";
 
 /**
  * In the code chart, the Unicode Character Database (UCD) is reorganized and
@@ -70,7 +70,7 @@ export class WritableChunks {
   }
 
   #chunkPath(chunkIndex: number): string {
-    return `${this.#path}/chunk-${chunkIndex.toString().padStart(4, "0")}.json`;
+    return `${this.#path}/${chunkNameOf(chunkIndex)}`;
   }
 
   async #readChunk(chunkIndex: number): Promise<ChunkData> {
@@ -93,7 +93,6 @@ export class WritableChunks {
   async #writeChunk(chunkIndex: number, chunk: ChunkData): Promise<void> {
     const filePath = this.#chunkPath(chunkIndex);
     const text = JSON.stringify(chunk);
-    await fs.mkdir(this.#path, { recursive: true });
     await fs.writeFile(filePath, text, "utf-8");
   }
 
