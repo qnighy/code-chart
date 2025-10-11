@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { parseCPNumber, formatCPNumber } from "../cp-number";
+import { ArbitraryText } from "../../ArbitraryText";
 
 interface PageProps {
   params: Promise<{
@@ -37,7 +38,11 @@ export default async function CodepointPage({ params }: PageProps) {
         </h1>
         
         <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-12 mb-8 text-center">
-          <div className="text-9xl mb-4">{character}</div>
+          <div className="text-9xl mb-4">
+            <ArbitraryText>
+              {character}
+            </ArbitraryText>
+          </div>
         </div>
 
         <div className="space-y-4">
