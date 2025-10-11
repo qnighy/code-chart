@@ -9,6 +9,7 @@
     "build": "next build",
     "fmt": "prettier -w .",
     "fmt:check": "prettier -c .",
+    "generate": "node --import jiti/register ./app/lib/ucd/generate.ts",
     "start": "next start",
     "lint": "eslint"
   },
