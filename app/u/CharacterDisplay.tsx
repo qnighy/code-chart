@@ -1,6 +1,6 @@
 "use client";
 
-import { ArbitraryText } from "../../ArbitraryText";
+import { ArbitraryText } from "../ArbitraryText";
 
 interface CharacterDisplayProps {
   codePoint: number;

@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import type { ReactElement } from "react";
 
 import { parseCPNumber, formatCPNumber } from "../cp-number";
-import { CharacterDisplay } from "./CharacterDisplay";
+import { CharacterDisplay } from "../CharacterDisplay";
 import { chunks } from "../../shared";
 import { chunkIndexOf } from "../../lib/ucd/chunk";
 import { deriveCharacterData } from "../../lib/ucd/derived-data";
