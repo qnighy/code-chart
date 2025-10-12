@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactElement } from "react";
 
 import { formatCPNumber } from "./cp-number";
+import { CharacterDisplay } from "./CharacterDisplay";
 
 export default async function CodepointListPage(): Promise<ReactElement> {
   // Display the first plane (BMP - Basic Multilingual Plane) by default
@@ -23,7 +24,6 @@ export default async function CodepointListPage(): Promise<ReactElement> {
         <div className="grid grid-cols-4 sm:grid-cols-8 md:grid-cols-12 lg:grid-cols-16 gap-2">
           {codepoints.map((cp) => {
             const cpHex = formatCPNumber(cp);
-            const character = String.fromCodePoint(cp);
 
             return (
               <Link
@@ -32,9 +32,11 @@ export default async function CodepointListPage(): Promise<ReactElement> {
                 className="aspect-square border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center relative group"
               >
                 <div className="text-center">
-                  <div className="text-2xl sm:text-3xl md:text-4xl">
-                    {character}
-                  </div>
+                  <CharacterDisplay
+                    codePoint={cp}
+                    className="text-2xl sm:text-3xl md:text-4xl"
+                    replacementClassName="text-gray-400 dark:text-gray-500"
+                  />
                   <div className="text-[0.5rem] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 font-mono">
                     {cpHex}
                   </div>
