@@ -14,18 +14,19 @@ export class Chunks {
 
   chunks: Map<number, Promise<ChunkData>> = new Map();
 
-  async getChunk(chunkIndex: number): Promise<ChunkData> {
+  // Not using `async` here so that the same Promise instance can be reused.
+  getChunk(chunkIndex: number): Promise<ChunkData> {
     const existing = this.chunks.get(chunkIndex);
     if (existing != null) {
       // LRU
       this.chunks.delete(chunkIndex);
       this.chunks.set(chunkIndex, existing);
-      return await existing;
+      return existing;
     }
     const promise = this._getChunk(chunkIndex);
     this.chunks.set(chunkIndex, promise);
     this.#evictChunks();
-    return await promise;
+    return promise;
   }
 
   private async _getChunk(chunkIndex: number): Promise<ChunkData> {
