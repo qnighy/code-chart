@@ -2,7 +2,10 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { extractUCD } from "./extract.ts";
 import { ucdTmpPath } from "./path.ts";
-import { parseUnicodeDataLine, type UnicodeDataRow } from "./unicode-data.ts";
+import {
+  parseUnicodeDataLines,
+  type UnicodeDataRowPair,
+} from "./unicode-data.ts";
 import { linesFromBytes } from "../line-stream.ts";
 
 export class UCD {
@@ -30,26 +33,20 @@ export class UCD {
     }
   }
 
-  async *unicodeData(): AsyncIterableIterator<UnicodeDataRow> {
+  async *unicodeData(): AsyncIterableIterator<UnicodeDataRowPair> {
     this.#ensureInitialized();
     const filePath = path.join(this.#path, "UnicodeData.txt");
     const fileHandle = await fs.open(filePath, "r");
     try {
-      for await (const line of linesFromBytes(
-        fileHandle.readableWebStream() as ReadableStream<BufferSource>,
+      for await (const rowPair of parseUnicodeDataLines(
+        linesFromBytes(
+          fileHandle.readableWebStream() as ReadableStream<BufferSource>,
+        ),
       )) {
-        yield parseUnicodeDataLine(line);
+        yield rowPair;
       }
     } finally {
       await fileHandle.close();
     }
-  }
-}
-
-if (import.meta.main) {
-  const ucd = new UCD("15.0.0");
-  await ucd.init();
-  for await (const row of ucd.unicodeData()) {
-    console.log(row);
   }
 }

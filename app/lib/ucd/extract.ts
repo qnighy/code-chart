@@ -38,7 +38,3 @@ export async function extractUCD(version: string): Promise<void> {
   const timestamp = new Date().toISOString();
   await fs.writeFile(timestampPath, timestamp);
 }
-
-if (import.meta.main) {
-  await extractUCD("16.0.0");
-}

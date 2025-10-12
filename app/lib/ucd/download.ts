@@ -26,7 +26,7 @@ export async function downloadUCD(version: string): Promise<Buffer> {
   await fs.mkdir(ucdTmpPath, { recursive: true });
 
   // Download the UCD zip file
-  const url = `https://www.unicode.org/Public/zipped/${version}/UCD.zip`;
+  const url = `https://www.unicode.org/Public/${version}/ucd/UCD.zip`;
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -44,8 +44,4 @@ export async function downloadUCD(version: string): Promise<Buffer> {
   await fs.rename(tempPath, destPath);
 
   return buffer;
-}
-
-if (import.meta.main) {
-  await downloadUCD("16.0.0");
 }

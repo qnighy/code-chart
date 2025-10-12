@@ -13,11 +13,65 @@ export type CharacterData = {
   name: string;
   /**
    * ```protobuf
+   * NameDerivation name_derivation = 4;
+   * ```
+   */
+  nameDerivation: NameDerivation;
+  /**
+   * ```protobuf
    * GeneralCategory general_category = 3;
    * ```
    */
   generalCategory: GeneralCategory;
 };
+
+/**
+ * ```protobuf
+ * enum NameDerivation {
+ *   // No name derivation.
+ *   NAME_DERIVATION_UNSPECIFIED = 0;
+ *   // <control-NNNN> (label, not a name)
+ *   NAME_DERIVATION_CONTROL = 1;
+ *   // <reserved-XXXX> (label, not a name)
+ *   NAME_DERIVATION_RESERVED = 2;
+ *   // <noncharacter-XXXX> (label, not a name)
+ *   NAME_DERIVATION_NONCHARACTER = 3;
+ *   // <private-use-XXXX> (label, not a name)
+ *   NAME_DERIVATION_PRIVATE_USE = 4;
+ *   // <surrogate-XXXX> (label, not a name)
+ *   NAME_DERIVATION_SURROGATE = 5;
+ *   // HANGUL SYLLABLE ZZZZ (rule NR1)
+ *   NAME_DERIVATION_HANGUL_SYLLABLE = 6;
+ *   // CJK UNIFIED IDEOGRAPH-XXXX (rule NR2)
+ *   NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH = 7;
+ *   // CJK COMPATIBILITY IDEOGRAPH-XXXX (rule NR2)
+ *   NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH = 8;
+ *   // EGYPTIAN HIEROGLYPH-XXXX (rule NR2)
+ *   NAME_DERIVATION_EGYPTIAN_HIEROGLYPH = 9;
+ *   // TANGUT IDEOGRAPH-XXXX (rule NR2)
+ *   NAME_DERIVATION_TANGUT_IDEOGRAPH = 10;
+ *   // NUSHU CHARACTER-XXXX (rule NR2)
+ *   NAME_DERIVATION_NUSHU_CHARACTER = 11;
+ *   // KHITAN SMALL SCRIPT CHARACTER-XXXX (rule NR2)
+ *   NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER = 12;
+ * }
+ * ```
+ */
+export type NameDerivation =
+  | "NAME_DERIVATION_UNSPECIFIED"
+  | "NAME_DERIVATION_CONTROL"
+  | "NAME_DERIVATION_RESERVED"
+  | "NAME_DERIVATION_NONCHARACTER"
+  | "NAME_DERIVATION_PRIVATE_USE"
+  | "NAME_DERIVATION_SURROGATE"
+  | "NAME_DERIVATION_HANGUL_SYLLABLE"
+  | "NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH"
+  | "NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH"
+  | "NAME_DERIVATION_EGYPTIAN_HIEROGLYPH"
+  | "NAME_DERIVATION_TANGUT_IDEOGRAPH"
+  | "NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER"
+  | "NAME_DERIVATION_NUSHU_CHARACTER"
+  | number;
 
 /**
  * https://www.unicode.org/reports/tr44/#General_Category_Values

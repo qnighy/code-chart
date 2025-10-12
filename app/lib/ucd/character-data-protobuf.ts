@@ -6,12 +6,17 @@ import {
   type EnumValueMap,
 } from "../protobuf/reader";
 import { ProtoWriter, type EnumNameMap } from "../protobuf/writer";
-import type { CharacterData, GeneralCategory } from "./character-data";
+import type {
+  CharacterData,
+  GeneralCategory,
+  NameDerivation,
+} from "./character-data";
 
 export function decodeCharacterData(buf: Uint8Array): CharacterData {
   const data: CharacterData = {
     codePoint: 0,
     name: "",
+    nameDerivation: "NAME_DERIVATION_UNSPECIFIED",
     generalCategory: "GENERAL_CATEGORY_UNSPECIFIED",
   };
   for (const field of new ProtoReader(buf)) {
@@ -21,6 +26,9 @@ export function decodeCharacterData(buf: Uint8Array): CharacterData {
         break;
       case 2:
         data.name = fieldAsString(field);
+        break;
+      case 4:
+        data.nameDerivation = fieldAsEnum(field, NameDerivationValueMap);
         break;
       case 3:
         data.generalCategory = fieldAsEnum(field, GeneralCategoryValueMap);
@@ -34,9 +42,42 @@ export function encodeCharacterData(data: CharacterData): Uint8Array {
   const writer = new ProtoWriter();
   writer.writeUint32Field(1, data.codePoint);
   writer.writeStringField(2, data.name);
+  writer.writeEnumField(4, data.nameDerivation, NameDerivationNameMap);
   writer.writeEnumField(3, data.generalCategory, GeneralCategoryNameMap);
   return writer.toUint8Array();
 }
+
+export const NameDerivationValueMap: EnumValueMap<NameDerivation> = {
+  0: "NAME_DERIVATION_UNSPECIFIED",
+  1: "NAME_DERIVATION_CONTROL",
+  2: "NAME_DERIVATION_RESERVED",
+  3: "NAME_DERIVATION_NONCHARACTER",
+  4: "NAME_DERIVATION_PRIVATE_USE",
+  5: "NAME_DERIVATION_SURROGATE",
+  6: "NAME_DERIVATION_HANGUL_SYLLABLE",
+  7: "NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH",
+  8: "NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH",
+  9: "NAME_DERIVATION_EGYPTIAN_HIEROGLYPH",
+  10: "NAME_DERIVATION_TANGUT_IDEOGRAPH",
+  11: "NAME_DERIVATION_NUSHU_CHARACTER",
+  12: "NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER",
+};
+
+export const NameDerivationNameMap: EnumNameMap<NameDerivation> = {
+  NAME_DERIVATION_UNSPECIFIED: 0,
+  NAME_DERIVATION_CONTROL: 1,
+  NAME_DERIVATION_RESERVED: 2,
+  NAME_DERIVATION_NONCHARACTER: 3,
+  NAME_DERIVATION_PRIVATE_USE: 4,
+  NAME_DERIVATION_SURROGATE: 5,
+  NAME_DERIVATION_HANGUL_SYLLABLE: 6,
+  NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH: 7,
+  NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH: 8,
+  NAME_DERIVATION_EGYPTIAN_HIEROGLYPH: 9,
+  NAME_DERIVATION_TANGUT_IDEOGRAPH: 10,
+  NAME_DERIVATION_NUSHU_CHARACTER: 11,
+  NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER: 12,
+};
 
 export const GeneralCategoryValueMap: EnumValueMap<GeneralCategory> = {
   0: "GENERAL_CATEGORY_UNSPECIFIED",
