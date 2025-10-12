@@ -1,3 +1,4 @@
+import { codePointHex, codePointHexName } from "../unicode";
 import type {
   CharacterData,
   GeneralCategoryCore,
@@ -90,10 +91,7 @@ export function deriveName(
     if (!template) {
       throw new RangeError(`Invalid name derivation: ${nameDerivation}`);
     }
-    return template.replace(
-      "$",
-      codePoint.toString(16).toUpperCase().padStart(4, "0"),
-    );
+    return template.replace("$", codePointHex(codePoint));
   }
 }
 
@@ -180,7 +178,7 @@ const T_TABLE = [
 function deriveHangulSyllableName(codePoint: number): string {
   if (codePoint < S_BASE || codePoint >= S_END) {
     throw new RangeError(
-      `Not a Hangul syllable: U+${codePoint.toString(16).toUpperCase().padStart(4, "0")}`,
+      `Not a Hangul syllable: ${codePointHexName(codePoint)}`,
     );
   }
   const sIndex = codePoint - S_BASE;

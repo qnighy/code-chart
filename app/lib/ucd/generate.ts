@@ -1,5 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
+
+import { codePointHex } from "../unicode";
 import { UCD } from "./handle";
 import { WritableChunks } from "./writable-chunks";
 import { CHUNK_SIZE, chunkIndexOf } from "./chunk";
@@ -130,7 +132,7 @@ function inferNameDerivation(
     throw new SyntaxError(`Unrecognized special name: ${declaredName}`);
   }
 
-  const cpSuffix = `-${codePoint.toString(16).toUpperCase().padStart(4, "0")}`;
+  const cpSuffix = `-${codePointHex(codePoint)}`;
   if (declaredName.endsWith(cpSuffix)) {
     const baseName = declaredName.slice(0, -cpSuffix.length);
     if (Object.hasOwn(IdeographBaseNameMap, baseName)) {

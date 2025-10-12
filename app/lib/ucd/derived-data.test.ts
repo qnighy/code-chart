@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+
+import { codePointHexName } from "../unicode";
 import { deriveName } from "./derived-data";
 
 describe("deriveName", () => {
@@ -46,7 +48,7 @@ describe("deriveName", () => {
     const codepoints = Array.from({ length: 11172 }, (_, i) => 0xac00 + i);
     const result = codepoints.map(
       (cp) =>
-        `U+${cp.toString(16).toUpperCase().padStart(4, "0")} ${deriveName(cp, "", "NAME_DERIVATION_HANGUL_SYLLABLE")}`,
+        `${codePointHexName(cp)} ${deriveName(cp, "", "NAME_DERIVATION_HANGUL_SYLLABLE")}`,
     );
     expect(result).toMatchSnapshot();
   });

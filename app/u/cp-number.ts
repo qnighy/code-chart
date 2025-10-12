@@ -1,3 +1,5 @@
+import { codePointHex } from "../lib/unicode";
+
 export type CPNumber = number;
 
 /**
@@ -29,5 +31,5 @@ export function formatCPNumber(cp: CPNumber): string {
   if (!(0 <= cp && cp < 0x110000)) {
     throw new RangeError("Code point must be in range 0 to 0x10FFFF");
   }
-  return cp.toString(16).toUpperCase().padStart(4, "0");
+  return codePointHex(cp);
 }
