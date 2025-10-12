@@ -4,6 +4,18 @@ import { ArbitraryText } from "../../ArbitraryText";
 
 interface CharacterDisplayProps {
   codePoint: number;
+  /**
+   * Additional class names to apply to the container element.
+   */
+  className?: string | undefined;
+  /**
+   * Class names to apply when displaying an ordinary character.
+   */
+  ordinaryClassName?: string | undefined;
+  /**
+   * Class names to apply when displaying a substitute character (e.g., control pictures).
+   */
+  replacementClassName?: string | undefined;
 }
 
 // Get display character for control characters
@@ -29,7 +41,12 @@ function getDisplayChar(codePoint: number): {
   return { char: String.fromCodePoint(codePoint), isSubstitute: false };
 }
 
-export function CharacterDisplay({ codePoint }: CharacterDisplayProps) {
+export function CharacterDisplay({
+  codePoint,
+  className = "",
+  ordinaryClassName = "",
+  replacementClassName = "",
+}: CharacterDisplayProps) {
   const character = String.fromCodePoint(codePoint);
   const { char: displayChar, isSubstitute } = getDisplayChar(codePoint);
 
@@ -41,11 +58,11 @@ export function CharacterDisplay({ codePoint }: CharacterDisplayProps) {
     }
   };
 
+  const appliedClassName =
+    `${className} ${isSubstitute ? replacementClassName : ordinaryClassName}`.trim();
+
   return (
-    <div
-      className={`text-6xl sm:text-9xl overflow-hidden ${isSubstitute ? "text-gray-400 dark:text-gray-500" : ""}`}
-      onCopy={handleCopy}
-    >
+    <div className={appliedClassName} onCopy={handleCopy}>
       <ArbitraryText>{displayChar}</ArbitraryText>
     </div>
   );

@@ -79,7 +79,11 @@ export default async function CodepointPage({
           )}
 
           <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 sm:p-12 text-center min-w-[200px] sm:min-w-[400px] min-h-[200px] sm:min-h-[300px] flex items-center justify-center">
-            <CharacterDisplay codePoint={cp} />
+            <CharacterDisplay
+              codePoint={cp}
+              className="text-6xl sm:text-9xl overflow-hidden"
+              replacementClassName="text-gray-400 dark:text-gray-500"
+            />
           </div>
 
           {nextCp !== null ? (
