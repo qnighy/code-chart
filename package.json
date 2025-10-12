@@ -15,6 +15,7 @@
     "fmt:check": "prettier -c .",
     "generate": "node --import jiti/register ./app/lib/ucd/generate.ts",
     "start": "next start",
+    "test": "vitest",
     "lint": "eslint"
   },
   "dependencies": {
