@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { VList, type VListHandle } from "virtua";
 import { CharacterDisplay } from "./CharacterDisplay";
 import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
@@ -13,6 +14,7 @@ interface CodepointListProps {
 
 export function CodepointList({ codepoints }: CodepointListProps) {
   const searchParams = useSearchParams();
+  const vlistRef = useRef<VListHandle>(null);
 
   // Parse codepoint from query parameter
   const cpParam = searchParams.get("cp");
@@ -67,9 +69,9 @@ export function CodepointList({ codepoints }: CodepointListProps) {
 
   return (
     <>
-      <div className="flex flex-col gap-2">
+      <VList ref={vlistRef} style={{ height: "calc(100vh - 200px)" }}>
         {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex flex-wrap gap-2">
+          <div key={rowIndex} className="flex flex-wrap gap-2 mb-2">
             {row.map((cp) => {
               const cpHex = formatCPNumber(cp);
 
@@ -95,7 +97,7 @@ export function CodepointList({ codepoints }: CodepointListProps) {
             })}
           </div>
         ))}
-      </div>
+      </VList>
 
       <CodepointModal
         codePoint={selectedCodepoint}

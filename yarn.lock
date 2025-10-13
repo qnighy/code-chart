@@ -2093,6 +2093,7 @@ __metadata:
     react-dom: "npm:^19.1.0"
     tailwindcss: "npm:^4.1.14"
     typescript: "npm:^5.9.3"
+    virtua: "npm:^0.45.2"
     vitest: "npm:^3.2.4"
   languageName: unknown
   linkType: soft
@@ -5587,6 +5588,30 @@ __metadata:
   dependencies:
     punycode: "npm:^2.1.0"
   checksum: 10c0/4ef57b45aa820d7ac6496e9208559986c665e49447cb072744c13b66925a362d96dd5a46c4530a6b8e203e5db5fe849369444440cb22ecfc26c679359e5dfa3c
+  languageName: node
+  linkType: hard
+
+"virtua@npm:^0.45.2":
+  version: 0.45.2
+  resolution: "virtua@npm:0.45.2"
+  peerDependencies:
+    react: ">=16.14.0"
+    react-dom: ">=16.14.0"
+    solid-js: ">=1.0"
+    svelte: ">=5.0"
+    vue: ">=3.2"
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-dom:
+      optional: true
+    solid-js:
+      optional: true
+    svelte:
+      optional: true
+    vue:
+      optional: true
+  checksum: 10c0/0aba4fe10e0fa775071883a87c5363ea15fd382975b28f52e0588660bfac52d83623bdce575400648b622d7561063776e0b2d59395a0e22de4bd382277c5773b
   languageName: node
   linkType: hard
 

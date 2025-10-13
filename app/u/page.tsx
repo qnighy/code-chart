@@ -11,7 +11,7 @@ export default async function CodepointListPage(): Promise<ReactElement> {
   // Display the first plane (BMP - Basic Multilingual Plane) by default
   // U+0000 to U+FFFF
   const startCp = 0x0000;
-  const endCp = 0x00ff; // Start with first 256 characters for now
+  const endCp = 0x2ff;
 
   const codepoints: number[] = [];
   for (let cp = startCp; cp <= endCp; cp++) {
