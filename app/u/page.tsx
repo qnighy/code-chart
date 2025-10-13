@@ -1,8 +1,13 @@
 import type { ReactElement } from "react";
+import { connection } from "next/server";
 
 import { CodepointList } from "./CodepointList";
 
 export default async function CodepointListPage(): Promise<ReactElement> {
+  // Prevent the page from being rendered at build time
+  // so that we can safely use `useSearchParams`.
+  await connection();
+
   // Display the first plane (BMP - Basic Multilingual Plane) by default
   // U+0000 to U+FFFF
   const startCp = 0x0000;
