@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CharacterDisplay } from "./CharacterDisplay";
-import { formatCPNumber } from "./cp-number";
+import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
 
 interface CodepointListProps {
@@ -11,9 +12,28 @@ interface CodepointListProps {
 }
 
 export function CodepointList({ codepoints }: CodepointListProps) {
-  const [selectedCodepoint, setSelectedCodepoint] = useState<number | null>(
-    null,
-  );
+  const searchParams = useSearchParams();
+
+  // Parse codepoint from query parameter
+  const cpParam = searchParams.get("cp");
+  const selectedCodepoint = cpParam ? parseCPNumber(cpParam) : null;
+
+  // Validate and normalize the cp parameter
+  useEffect(() => {
+    if (!cpParam) return;
+
+    if (selectedCodepoint != null) {
+      // Check if normalization is needed
+      const normalized = formatCPNumber(selectedCodepoint);
+      if (normalized !== cpParam.toUpperCase()) {
+        // Normalize the cp parameter
+        updateUrlWithCodepoint(normalized);
+      }
+    } else {
+      // Invalid cp parameter, remove it
+      updateUrlWithCodepoint(null);
+    }
+  }, [cpParam, selectedCodepoint]);
 
   const handleLinkClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -24,17 +44,19 @@ export function CodepointList({ codepoints }: CodepointListProps) {
       return;
     }
 
-    // Prevent default navigation and show modal instead
+    // Prevent default navigation and show modal instead by updating query params
     e.preventDefault();
-    setSelectedCodepoint(cp);
+    const cpHex = formatCPNumber(cp);
+    updateUrlWithCodepoint(cpHex);
   };
 
   const handleCloseModal = () => {
-    setSelectedCodepoint(null);
+    updateUrlWithCodepoint(null);
   };
 
   const handleNavigate = (cp: number) => {
-    setSelectedCodepoint(cp);
+    const cpHex = formatCPNumber(cp);
+    updateUrlWithCodepoint(cpHex);
   };
 
   return (
@@ -72,4 +94,18 @@ export function CodepointList({ codepoints }: CodepointListProps) {
       />
     </>
   );
+}
+
+function updateUrlWithCodepoint(cpHex: string | null) {
+  const params = new URLSearchParams(window.location.search);
+  if (cpHex) {
+    params.set("cp", cpHex);
+  } else {
+    params.delete("cp");
+  }
+  const queryString = params.toString();
+  const pathname = window.location.pathname;
+  const hash = window.location.hash;
+  const newUrl = `${pathname}${queryString ? `?${queryString}` : ""}${hash}`;
+  window.history.replaceState(null, "", newUrl);
 }
