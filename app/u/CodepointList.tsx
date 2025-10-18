@@ -54,7 +54,7 @@ export function CodepointList() {
   const vlistRef = useRef<VirtuosoHandle>(null);
 
   const loadMoreBefore = useCallback(() => {
-    const frontier = listData.frontier[0];
+    const frontier = listData.lowFrontier;
     if (frontier <= 0) return; // Already at the beginning
     const loadTo = Math.max(frontier - 256, 0);
     const newCps: number[] = [];
@@ -67,7 +67,7 @@ export function CodepointList() {
   }, [backwardExpand, listData]);
 
   const loadMoreAfter = useCallback(() => {
-    const frontier = listData.frontier[1];
+    const frontier = listData.highFrontier;
     if (frontier >= 0x110000) return; // Already at the end
     const loadTo = Math.min(frontier + 256, 0x110000);
     const newCps: number[] = [];
@@ -81,12 +81,10 @@ export function CodepointList() {
 
   const clearLines = useCallback(
     (dir: "backward" | "forward") => {
-      const size =
-        16 *
-        Math.max(
-          MIN_KEEPED_LINES,
-          numLinesShown.current * 2 + EXTRA_KEEPED_LINES,
-        );
+      const size = Math.max(
+        MIN_KEEPED_LINES,
+        numLinesShown.current * 2 + EXTRA_KEEPED_LINES,
+      );
       if (dir === "backward") {
         backwardCutOff(size, size);
       } else {
@@ -190,6 +188,7 @@ export function CodepointList() {
     <div ref={scrollRootRef}>
       <Virtuoso
         ref={vlistRef}
+        firstItemIndex={layoutData.offset}
         data={layoutData.rows}
         style={{ height: "calc(100vh - 200px)" }}
         initialTopMostItemIndex={{

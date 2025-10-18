@@ -1,8 +1,10 @@
 import { useCallback, useDebugValue, useReducer } from "react";
 import {
   createVirtualUList,
-  cutOffVirtualUList,
-  expandVirtualUList,
+  cutOffVirtualUListBackward,
+  cutOffVirtualUListForward,
+  expandVirtualUListBackward,
+  expandVirtualUListForward,
   type VirtualUList,
 } from "./virtual-ulist";
 
@@ -44,27 +46,28 @@ export function useVirtualUListDispatch(
 
   const backwardCutOff = useCallback(
     (cutOff: number, threshold: number) => {
-      if (listData.codePoints.length <= threshold) {
+      if (listData.rows.length <= threshold) {
         return;
       }
       dispatch({ type: "BACKWARD_CUT_OFF", cutOff });
     },
-    [listData.codePoints.length],
+    [listData.rows.length],
   );
 
   const forwardCutOff = useCallback(
     (cutOff: number, threshold: number) => {
-      if (listData.codePoints.length <= threshold) {
+      if (listData.rows.length <= threshold) {
         return;
       }
       dispatch({ type: "FORWARD_CUT_OFF", cutOff });
     },
-    [listData.codePoints.length],
+    [listData.rows.length],
   );
 
   useDebugValue({
-    listSize: listData.codePoints.length,
-    frontier: listData.frontier,
+    rowCount: listData.rows.length,
+    lowFrontier: listData.lowFrontier,
+    highFrontier: listData.highFrontier,
   });
 
   return {
@@ -110,15 +113,21 @@ function listDataReducer(
 ): VirtualUList {
   switch (action.type) {
     case "BACKWARD_EXPAND":
-    case "FORWARD_EXPAND":
-      return expandVirtualUList(state, action.newCps, action.appenderRange);
-    case "BACKWARD_CUT_OFF":
-    case "FORWARD_CUT_OFF": {
-      return cutOffVirtualUList(
+      return expandVirtualUListBackward(
         state,
-        action.cutOff,
-        action.type === "BACKWARD_CUT_OFF" ? "backward" : "forward",
+        action.newCps,
+        action.appenderRange,
       );
+    case "FORWARD_EXPAND":
+      return expandVirtualUListForward(
+        state,
+        action.newCps,
+        action.appenderRange,
+      );
+    case "BACKWARD_CUT_OFF":
+      return cutOffVirtualUListBackward(state, action.cutOff);
+    case "FORWARD_CUT_OFF": {
+      return cutOffVirtualUListForward(state, action.cutOff);
     }
     default:
       return state;

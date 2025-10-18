@@ -1,82 +1,230 @@
+const ROW_ALIGN = 16;
+const ROW_ALIGN_THRESHOLD = 8;
+const RANGE_LOW = 0;
+const RANGE_HIGH = 0x110000;
+
 /**
  * Keeps track of a bidirectionally paginatable list of Unicode code points.
  */
 export type VirtualUList = {
   /**
-   * The known code points in the list, sorted in ascending order.
+   * The list is complete for all code points in the half-open range
+   * [lowFrontier, highFrontier).
    */
-  readonly codePoints: readonly number[];
+  lowFrontier: number;
   /**
-   * The half-open range of codepoints where the list is known to be complete.
+   * The relative offset to keep track of scroll position.
+   * It points to the persistent index of the first row in `rows`.
    */
-  readonly frontier: readonly [low: number, high: number];
+  offset: number;
+  /**
+   * The list of current set of rows.
+   */
+  rows: readonly DelimitedRow[];
+
+  /**
+   * The list is complete for all code points in the half-open range
+   * [lowFrontier, highFrontier).
+   */
+  highFrontier: number;
+};
+
+export type DelimitedRow = DiscreteRow | AlignedRow;
+
+export type DiscreteRow = {
+  type: "Discrete";
+  values: readonly number[];
+};
+
+export type AlignedRow = {
+  type: "Aligned";
+  values: readonly number[];
 };
 
 export function createVirtualUList(init: number): VirtualUList {
   return {
-    codePoints: [],
-    frontier: [init, init],
+    lowFrontier: init,
+    offset: 0x110000,
+    rows: [],
+    highFrontier: init,
   };
 }
 
-export function expandVirtualUList(
+export function expandVirtualUListBackward(
+  list: VirtualUList,
+  prependCodePoints: readonly number[],
+  prependerRange: readonly [low: number, high: number],
+): VirtualUList {
+  if (list.lowFrontier !== prependerRange[1]) {
+    // Not an intended prepend operation.
+    // Maybe caused by a race condition.
+    return list;
+  }
+  let cutAt = 0;
+  let cutSize = 0;
+  while (
+    cutAt < list.rows.length &&
+    list.rows[cutAt - 1]?.type !== "Aligned" &&
+    cutSize < ROW_ALIGN
+  ) {
+    cutSize += list.rows[cutAt]!.values.length;
+    cutAt++;
+  }
+  const discretes = [
+    ...prependCodePoints,
+    ...list.rows.slice(0, cutAt).flatMap((row) => row.values),
+  ];
+  const reDelimited = delimitDiscretesBackward(discretes);
+  return {
+    lowFrontier: prependerRange[0],
+    offset: list.offset - (reDelimited.length - cutAt),
+    rows: [...reDelimited, ...list.rows.slice(cutAt)],
+    highFrontier: list.highFrontier,
+  };
+}
+
+export function expandVirtualUListForward(
   list: VirtualUList,
   appendCodePoints: readonly number[],
   appenderRange: readonly [low: number, high: number],
 ): VirtualUList {
-  const newListBody = Array.from(
-    new Set([...list.codePoints, ...appendCodePoints]),
-  ).sort((a, b) => a - b);
-  const consective =
-    appenderRange[0] <= list.frontier[1] &&
-    appenderRange[1] >= list.frontier[0];
-  const newFrontier: readonly [number, number] = consective
-    ? [
-        Math.min(list.frontier[0], appenderRange[0]),
-        Math.max(list.frontier[1], appenderRange[1]),
-      ]
-    : list.frontier;
-  const newList: VirtualUList = {
-    ...list,
-    codePoints: newListBody,
-    frontier: newFrontier,
-  };
-  return newList;
-}
-
-export function cutOffVirtualUList(
-  list: VirtualUList,
-  cutOff: number,
-  dir: "backward" | "forward",
-): VirtualUList {
-  if (list.codePoints.length <= cutOff) {
+  if (list.highFrontier !== appenderRange[0]) {
+    // Not an intended append operation.
+    // Maybe caused by a race condition.
     return list;
   }
-  if (dir === "backward") {
-    const index = list.codePoints.length - cutOff;
-    const newFrontier = Math.max(
-      list.frontier[0],
-      list.codePoints[index - 1]! + 1,
-    );
-    return {
-      ...list,
-      codePoints: list.codePoints.slice(index),
-      frontier: [newFrontier, list.frontier[1]],
-    };
-  } else {
-    const index = cutOff;
-    const newFrontier = Math.min(list.frontier[1], list.codePoints[index]!);
-    return {
-      ...list,
-      codePoints: list.codePoints.slice(0, index),
-      frontier: [list.frontier[0], newFrontier],
-    };
+  let cutAt = list.rows.length;
+  let cutSize = 0;
+  while (
+    cutAt > 0 &&
+    list.rows[cutAt]?.type !== "Aligned" &&
+    cutSize < ROW_ALIGN
+  ) {
+    cutSize += list.rows[cutAt - 1]!.values.length;
+    cutAt--;
   }
+  const discretes = [
+    ...list.rows.slice(cutAt).flatMap((row) => row.values),
+    ...appendCodePoints,
+  ];
+  const reDelimited = delimitDiscretesForward(discretes);
+  return {
+    lowFrontier: list.lowFrontier,
+    offset: list.offset,
+    rows: [...list.rows.slice(0, cutAt), ...reDelimited],
+    highFrontier: appenderRange[1],
+  };
+}
+
+function delimitDiscretesBackward(
+  discretes: readonly number[],
+): DelimitedRow[] {
+  const rowsReversed: DelimitedRow[] = [];
+  let i = discretes.length;
+  let discreteEnd = discretes.length;
+  const flush = (to: number, last = false) => {
+    while (discreteEnd > to && (last || discreteEnd - to >= ROW_ALIGN)) {
+      const discreteStart = Math.max(to, discreteEnd - ROW_ALIGN);
+      rowsReversed.push({
+        type: "Discrete",
+        values: discretes.slice(discreteStart, discreteEnd),
+      });
+      discreteEnd = discreteStart;
+    }
+  };
+  while (i > 0) {
+    const end = i;
+    const endElement = discretes[i - 1]!;
+    i--;
+    while (
+      i > 0 &&
+      Math.floor(discretes[i - 1]! / ROW_ALIGN) ===
+        Math.floor(endElement / ROW_ALIGN)
+    ) {
+      i--;
+    }
+    if (end - i >= ROW_ALIGN_THRESHOLD) {
+      flush(end, true);
+      discreteEnd = i;
+      rowsReversed.push({ type: "Aligned", values: discretes.slice(i, end) });
+    } else {
+      flush(i);
+    }
+  }
+  return rowsReversed.toReversed();
+}
+
+function delimitDiscretesForward(discretes: readonly number[]): DelimitedRow[] {
+  const rows: DelimitedRow[] = [];
+  let i = 0;
+  let discreteStart = 0;
+  const flush = (to: number, last = false) => {
+    while (discreteStart < to && (last || to - discreteStart >= ROW_ALIGN)) {
+      const discreteEnd = Math.min(to, discreteStart + ROW_ALIGN);
+      rows.push({
+        type: "Discrete",
+        values: discretes.slice(discreteStart, discreteEnd),
+      });
+      discreteStart = discreteEnd;
+    }
+  };
+  while (i < discretes.length) {
+    const start = i;
+    const startElement = discretes[i]!;
+    i++;
+    while (
+      i < discretes.length &&
+      Math.floor(discretes[i]! / ROW_ALIGN) ===
+        Math.floor(startElement / ROW_ALIGN)
+    ) {
+      i++;
+    }
+    if (i - start >= ROW_ALIGN_THRESHOLD) {
+      flush(start, true);
+      discreteStart = i;
+      rows.push({ type: "Aligned", values: discretes.slice(start, i) });
+    } else {
+      flush(i);
+    }
+  }
+  flush(i, true);
+  return rows;
+}
+
+export function cutOffVirtualUListBackward(
+  list: VirtualUList,
+  cutOffRows: number,
+): VirtualUList {
+  if (list.rows.length <= cutOffRows) {
+    return list;
+  }
+  const index = list.rows.length - cutOffRows;
+  return {
+    ...list,
+    rows: list.rows.slice(index),
+    lowFrontier: list.rows[index - 1]!.values.at(-1)! + 1,
+  };
+}
+
+export function cutOffVirtualUListForward(
+  list: VirtualUList,
+  cutOffRows: number,
+): VirtualUList {
+  if (list.rows.length <= cutOffRows) {
+    return list;
+  }
+  const index = cutOffRows;
+  return {
+    ...list,
+    rows: list.rows.slice(0, index),
+    highFrontier: list.rows[index]!.values[0]!,
+  };
 }
 
 export type VLayout = {
   rows: readonly VLayoutRow[];
   currentRowIndex: number;
+  offset: number;
   hasLowFrontier: boolean;
   hasHighFrontier: boolean;
 };
@@ -99,192 +247,34 @@ export type EmptyCell = {
   cellKind: "padding" | "shimmer";
 };
 
-const ROW_ALIGN = 16;
-const ROW_ALIGN_THRESHOLD = 8;
-const RANGE_LOW = 0;
-const RANGE_HIGH = 0x110000;
-
 export function layoutVirtualUList(
   list: VirtualUList,
   current: number,
 ): VLayout {
-  const hasLowFrontier = list.frontier[0] > RANGE_LOW;
-  const hasHighFrontier = list.frontier[1] < RANGE_HIGH;
+  const hasLowFrontier = list.lowFrontier > RANGE_LOW;
+  const hasHighFrontier = list.highFrontier < RANGE_HIGH;
 
-  const partialGroups = groupPartially(list.codePoints);
-  let partitionPos = partialGroups.findIndex((elem) => {
-    const [, end] = partialGroupRange(elem);
+  let currentRowPos = list.rows.findIndex((row) => {
+    const end = row.values.at(-1)! + 1;
     return end > current;
   });
-  if (partitionPos === -1) {
-    partitionPos = partialGroups.length;
+  if (currentRowPos === -1) {
+    currentRowPos = list.rows.length;
   }
-  const partialGroupsPrecede = partialGroups.slice(0, partitionPos);
-  const partialGroupsFollow = partialGroups.slice(partitionPos);
-  const groupsPrecede = regroupBackward(partialGroupsPrecede, hasLowFrontier);
-  const groupsFollow = regroupForward(partialGroupsFollow, hasHighFrontier);
-  const grouped: VLayoutRow[] = [...groupsPrecede, ...groupsFollow];
-  const currentRowIndex = groupsPrecede.length;
-  return { rows: grouped, hasLowFrontier, hasHighFrontier, currentRowIndex };
-}
-
-type PartiallyGroupedElement = VLayoutCell | VLayoutRow;
-
-function partialGroupRange(
-  elem: PartiallyGroupedElement,
-): readonly [number, number] {
-  if (elem.type === "CodePoint" || elem.type === "Empty") {
-    return [elem.codePoint, elem.codePoint + 1];
-  } else {
-    if (elem.cells.length === 0) {
-      throw new TypeError("Unexpected empty partial group");
-    }
-    const start = Math.floor(elem.cells[0]!.codePoint / ROW_ALIGN) * ROW_ALIGN;
-    return [start, start + ROW_ALIGN];
-  }
-}
-
-function groupPartially(
-  elements: readonly number[],
-): readonly PartiallyGroupedElement[] {
-  const grouped: PartiallyGroupedElement[] = [];
-  let i = 0;
-  while (i < elements.length) {
-    const start = i;
-    const startElement = elements[i]!;
-    i++;
-    while (
-      i < elements.length &&
-      Math.floor(elements[i]! / ROW_ALIGN) ===
-        Math.floor(startElement / ROW_ALIGN)
-    ) {
-      i++;
-    }
-    if (i - start >= ROW_ALIGN_THRESHOLD) {
-      const aligned = Math.floor(startElement / ROW_ALIGN) * ROW_ALIGN;
-      const group: VLayoutCell[] = Array.from(
-        { length: ROW_ALIGN },
-        (_, i): VLayoutCell => ({
-          type: "Empty",
-          codePoint: aligned + i,
-          offset: 0,
-          cellKind: "padding",
+  return {
+    rows: list.rows.map((row) => ({
+      type: "Row",
+      cells: row.values.map(
+        (cp): VLayoutCell => ({
+          type: "CodePoint",
+          codePoint: cp,
         }),
-      );
-      for (let j = start; j < i; j++) {
-        const el = elements[j]!;
-        group[el % ROW_ALIGN] = { type: "CodePoint", codePoint: el };
-      }
-      grouped.push({
-        type: "Row",
-        cells: group,
-        range: [aligned, aligned + ROW_ALIGN],
-      });
-    } else {
-      grouped.push(
-        ...elements.slice(start, i).map(
-          (el): PartiallyGroupedElement => ({
-            type: "CodePoint",
-            codePoint: el,
-          }),
-        ),
-      );
-    }
-  }
-  return grouped;
-}
-
-function regroupForward(
-  partialGroups: readonly PartiallyGroupedElement[],
-  hasHighFrontier: boolean,
-): readonly VLayoutRow[] {
-  const grouped: VLayoutRow[] = [];
-  let currentRow: VLayoutCell[] | null = null as VLayoutCell[] | null;
-  const flush = (last = false) => {
-    if (currentRow != null) {
-      while (currentRow.length < ROW_ALIGN) {
-        const prev = currentRow[currentRow.length - 1]!;
-        const prevOffset = prev.type === "Empty" ? prev.offset : 0;
-        currentRow.push({
-          type: "Empty",
-          codePoint: prev.codePoint,
-          offset: prevOffset + 1,
-          cellKind: last && hasHighFrontier ? "shimmer" : "padding",
-        });
-      }
-      grouped.push({
-        type: "Row",
-        cells: currentRow,
-        range: [
-          currentRow[0]!.codePoint,
-          currentRow[currentRow.length - 1]!.codePoint + 1,
-        ],
-      });
-      currentRow = null;
-    }
+      ),
+      range: [row.values[0]!, row.values.at(-1)! + 1],
+    })),
+    currentRowIndex: currentRowPos,
+    offset: list.offset,
+    hasLowFrontier,
+    hasHighFrontier,
   };
-
-  for (const elem of partialGroups) {
-    if (elem.type === "CodePoint" || elem.type === "Empty") {
-      if (currentRow != null && currentRow.length >= ROW_ALIGN) {
-        flush();
-      }
-      currentRow ??= [];
-      currentRow.push(elem);
-    } else {
-      flush();
-      grouped.push(elem);
-    }
-  }
-  flush(true);
-  return grouped;
-}
-
-function regroupBackward(
-  partialGroups: readonly PartiallyGroupedElement[],
-  hasLowFrontier: boolean,
-): readonly VLayoutRow[] {
-  const groupedReversed: VLayoutRow[] = [];
-  let currentRowReversed: VLayoutCell[] | null = null as VLayoutCell[] | null;
-  const flush = (last = false) => {
-    if (currentRowReversed != null) {
-      while (currentRowReversed.length < ROW_ALIGN) {
-        const prev = currentRowReversed[currentRowReversed.length - 1]!;
-        const prevOffset = prev.type === "Empty" ? prev.offset : 0;
-        currentRowReversed.push({
-          type: "Empty",
-          codePoint: prev.codePoint,
-          offset: prevOffset - 1,
-          cellKind: last && hasLowFrontier ? "shimmer" : "padding",
-        });
-      }
-      groupedReversed.push({
-        type: "Row",
-        cells: currentRowReversed.toReversed(),
-        range: [
-          currentRowReversed[currentRowReversed.length - 1]!.codePoint,
-          currentRowReversed[0]!.codePoint + 1,
-        ],
-      });
-      currentRowReversed = null;
-    }
-  };
-
-  for (const elem of partialGroups.toReversed()) {
-    if (elem.type === "CodePoint" || elem.type === "Empty") {
-      if (
-        currentRowReversed != null &&
-        currentRowReversed.length >= ROW_ALIGN
-      ) {
-        flush();
-      }
-      currentRowReversed ??= [];
-      currentRowReversed.push(elem);
-    } else {
-      flush();
-      groupedReversed.push(elem);
-    }
-  }
-  flush(true);
-  return groupedReversed.reverse();
 }
