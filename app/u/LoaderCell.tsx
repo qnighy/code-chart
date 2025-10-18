@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 interface LoaderCellProps {
-  observer?: IntersectionObserver;
+  observer: IntersectionObserver | null;
 }
 
 export function LoaderCell({ observer }: LoaderCellProps) {
@@ -11,7 +11,7 @@ export function LoaderCell({ observer }: LoaderCellProps) {
 
   useEffect(() => {
     const element = divRef.current;
-    if (!element || !observer) return;
+    if (element == null || observer == null) return;
 
     observer.observe(element);
 

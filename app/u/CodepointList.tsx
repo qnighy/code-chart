@@ -56,7 +56,7 @@ export function CodepointList() {
         loadMoreBefore();
       }
     },
-    { threshold: 0.1 },
+    { rootMargin: "50%" },
   );
 
   const loaderAfterObserver = useIntersectionObserver(
@@ -65,7 +65,7 @@ export function CodepointList() {
         loadMoreAfter();
       }
     },
-    { threshold: 0.1 },
+    { rootMargin: "50%" },
   );
 
   const onScroll = useCallback(() => {
@@ -161,8 +161,8 @@ export function CodepointList() {
                       key={`${cp}-${cellIndex}`}
                       observer={
                         cp === "loading-before"
-                          ? (loaderBeforeObserver ?? undefined)
-                          : (loaderAfterObserver ?? undefined)
+                          ? loaderBeforeObserver
+                          : loaderAfterObserver
                       }
                     />
                   );
