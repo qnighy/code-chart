@@ -84,29 +84,22 @@ export type VLayoutRow = {
   readonly cells: readonly VLayoutCell[];
   readonly range: readonly [number, number];
 };
-export type VLayoutCell = CodePointCell | LoadingCell | EmptyCell;
+export type VLayoutCell = CodePointCell | EmptyCell;
 
 export type CodePointCell = {
   type: "CodePoint";
   codePoint: number;
 };
 
-export type LoadingCell = {
-  type: "Loading";
-  codePoint: number;
-  offset: number;
-  direction: "before" | "after";
-};
-
 export type EmptyCell = {
   type: "Empty";
   codePoint: number;
   offset: number;
+  cellKind: "padding" | "shimmer";
 };
 
 const ROW_ALIGN = 16;
 const ROW_ALIGN_THRESHOLD = 8;
-const LOADER_ROWS = 4;
 const RANGE_LOW = 0;
 const RANGE_HIGH = 0x110000;
 
@@ -127,33 +120,9 @@ export function layoutVirtualUList(
   }
   const partialGroupsPrecede = partialGroups.slice(0, partitionPos);
   const partialGroupsFollow = partialGroups.slice(partitionPos);
-  if (hasLowFrontier) {
-    const prepender: PartiallyGroupedElement[] = [];
-    for (let i = 0; i < LOADER_ROWS * ROW_ALIGN; i++) {
-      prepender.push({
-        type: "Loading",
-        codePoint: list.frontier[0] - 1,
-        offset: i - (LOADER_ROWS * ROW_ALIGN - 1),
-        direction: "before",
-      });
-    }
-    partialGroupsPrecede.unshift(...prepender);
-  }
-  if (hasHighFrontier) {
-    const appender: PartiallyGroupedElement[] = [];
-    for (let i = 0; i < LOADER_ROWS * ROW_ALIGN; i++) {
-      appender.push({
-        type: "Loading",
-        codePoint: list.frontier[1],
-        offset: i,
-        direction: "after",
-      });
-    }
-    partialGroupsFollow.push(...appender);
-  }
   const grouped: VLayoutRow[] = [
-    ...regroupForward(partialGroupsPrecede),
-    ...regroupBackward(partialGroupsFollow),
+    ...regroupBackward(partialGroupsPrecede, hasLowFrontier),
+    ...regroupForward(partialGroupsFollow, hasHighFrontier),
   ];
   return { rows: grouped, hasLowFrontier, hasHighFrontier };
 }
@@ -163,11 +132,7 @@ type PartiallyGroupedElement = VLayoutCell | VLayoutRow;
 function partialGroupRange(
   elem: PartiallyGroupedElement,
 ): readonly [number, number] {
-  if (
-    elem.type === "CodePoint" ||
-    elem.type === "Loading" ||
-    elem.type === "Empty"
-  ) {
+  if (elem.type === "CodePoint" || elem.type === "Empty") {
     return [elem.codePoint, elem.codePoint + 1];
   } else {
     if (elem.cells.length === 0) {
@@ -202,6 +167,7 @@ function groupPartially(
           type: "Empty",
           codePoint: aligned + i,
           offset: 0,
+          cellKind: "padding",
         }),
       );
       for (let j = start; j < i; j++) {
@@ -229,18 +195,20 @@ function groupPartially(
 
 function regroupForward(
   partialGroups: readonly PartiallyGroupedElement[],
+  hasHighFrontier: boolean,
 ): readonly VLayoutRow[] {
   const grouped: VLayoutRow[] = [];
   let currentRow: VLayoutCell[] | null = null as VLayoutCell[] | null;
   const flush = (last = false) => {
     if (currentRow != null) {
-      while (!last && currentRow.length < ROW_ALIGN) {
+      while (currentRow.length < ROW_ALIGN) {
         const prev = currentRow[currentRow.length - 1]!;
         const prevOffset = prev.type === "Empty" ? prev.offset : 0;
         currentRow.push({
           type: "Empty",
           codePoint: prev.codePoint,
           offset: prevOffset + 1,
+          cellKind: last && hasHighFrontier ? "shimmer" : "padding",
         });
       }
       grouped.push({
@@ -256,11 +224,7 @@ function regroupForward(
   };
 
   for (const elem of partialGroups) {
-    if (
-      elem.type === "CodePoint" ||
-      elem.type === "Loading" ||
-      elem.type === "Empty"
-    ) {
+    if (elem.type === "CodePoint" || elem.type === "Empty") {
       if (currentRow != null && currentRow.length >= ROW_ALIGN) {
         flush();
       }
@@ -277,18 +241,20 @@ function regroupForward(
 
 function regroupBackward(
   partialGroups: readonly PartiallyGroupedElement[],
+  hasLowFrontier: boolean,
 ): readonly VLayoutRow[] {
   const groupedReversed: VLayoutRow[] = [];
   let currentRowReversed: VLayoutCell[] | null = null as VLayoutCell[] | null;
   const flush = (last = false) => {
     if (currentRowReversed != null) {
-      while (!last && currentRowReversed.length < ROW_ALIGN) {
+      while (currentRowReversed.length < ROW_ALIGN) {
         const prev = currentRowReversed[currentRowReversed.length - 1]!;
         const prevOffset = prev.type === "Empty" ? prev.offset : 0;
         currentRowReversed.push({
           type: "Empty",
           codePoint: prev.codePoint,
           offset: prevOffset - 1,
+          cellKind: last && hasLowFrontier ? "shimmer" : "padding",
         });
       }
       groupedReversed.push({
@@ -304,11 +270,7 @@ function regroupBackward(
   };
 
   for (const elem of partialGroups.toReversed()) {
-    if (
-      elem.type === "CodePoint" ||
-      elem.type === "Loading" ||
-      elem.type === "Empty"
-    ) {
+    if (elem.type === "CodePoint" || elem.type === "Empty") {
       if (
         currentRowReversed != null &&
         currentRowReversed.length >= ROW_ALIGN

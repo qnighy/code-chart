@@ -114,6 +114,12 @@ export function CodepointList() {
     (range: { startIndex: number; endIndex: number }) => {
       numLinesShown.current = range.endIndex - range.startIndex;
 
+      if (range.startIndex <= 0 && layoutData.hasLowFrontier) {
+        // Compensation for oft-misbehaving Virtuoso's startReached callback.
+        vlistRef.current?.scrollToIndex({ align: "start", index: 1 });
+        requestLoadMoreBefore();
+      }
+
       const middleIndex = Math.floor((range.startIndex + range.endIndex) / 2);
       if (middleIndex < 0 || middleIndex >= layoutData.rows.length) {
         return;
@@ -121,7 +127,7 @@ export function CodepointList() {
       const middleRow = layoutData.rows[middleIndex];
       updateUrlWithPosition(middleRow.range[0]);
     },
-    [layoutData],
+    [layoutData, requestLoadMoreBefore],
   );
 
   const initialLoadDone = useRef(false);
@@ -196,23 +202,19 @@ export function CodepointList() {
           Footer: showBottomShimmer ? ShimmerFooter : undefined,
         }}
         itemContent={(_rowIndex, row) => {
-          const firstCell = row.cells[0]!;
           const firstCode = row.range[0];
-          const key =
-            firstCell.type === "Loading"
-              ? `row-${codePointHex(firstCode)}-${firstCell.offset}`
-              : `row-${codePointHex(firstCode)}`;
+          const key = `row-${codePointHex(firstCode)}`;
           return (
             <div key={key} className="flex flex-wrap gap-2 mb-2">
               {row.cells.map((cell) => {
-                if (cell.type === "Empty") {
+                if (cell.type === "Empty" && cell.cellKind === "padding") {
                   return (
                     <div
                       key={`e-${codePointHex(cell.codePoint)}-${cell.offset}`}
                       className="aspect-square w-16"
                     />
                   );
-                } else if (cell.type === "Loading") {
+                } else if (cell.type === "Empty") {
                   return (
                     <LoaderCell
                       key={`ld-${codePointHex(cell.codePoint)}-${cell.offset}`}
