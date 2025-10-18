@@ -9,7 +9,7 @@ import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
 import { LoaderCell } from "./LoaderCell";
 import { useIntersectionObserver } from "./useIntersectionObserver";
-import { getVirtualUListDerivation } from "./virtual-ulist";
+import { layoutVirtualUList } from "./virtual-ulist";
 import { useVirtualUListDispatch } from "./useVirtualUListDispatch";
 import { codePointHex } from "../lib/unicode";
 
@@ -33,7 +33,7 @@ export function CodepointList() {
   } = useVirtualUListDispatch(currentPos ?? 0);
 
   const derivedList = useMemo(
-    () => getVirtualUListDerivation(listData, currentPos ?? 0),
+    () => layoutVirtualUList(listData, currentPos ?? 0),
     [listData, currentPos],
   );
   const vlistRef = useRef<VirtuosoHandle>(null);

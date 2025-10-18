@@ -75,12 +75,9 @@ export function cutOffVirtualUList(
   }
 }
 
-export type VirtualUListDerivation = readonly VirtualUListDerivationRow[];
-export type VirtualUListDerivationRow = readonly VirtualUListDerivationCell[];
-export type VirtualUListDerivationCell =
-  | CodePointCell
-  | LoadingCell
-  | EmptyCell;
+export type VLayout = readonly VLayoutRow[];
+export type VLayoutRow = readonly VLayoutCell[];
+export type VLayoutCell = CodePointCell | LoadingCell | EmptyCell;
 
 export type CodePointCell = {
   type: "CodePoint";
@@ -104,10 +101,10 @@ const LOADER_ROWS = 4;
 const RANGE_LOW = 0;
 const RANGE_HIGH = 0x110000;
 
-export function getVirtualUListDerivation(
+export function layoutVirtualUList(
   list: VirtualUList,
   current: number,
-): VirtualUListDerivation {
+): VLayout {
   const hasLowFrontier = list.frontier[0] > RANGE_LOW;
   const hasHighFrontier = list.frontier[1] < RANGE_HIGH;
 
@@ -137,16 +134,14 @@ export function getVirtualUListDerivation(
     }
     partialGroupsFollow.push(...appender);
   }
-  const grouped: VirtualUListDerivationRow[] = [
+  const grouped: VLayoutRow[] = [
     ...regroupForward(partialGroupsPrecede),
     ...regroupBackward(partialGroupsFollow),
   ];
   return grouped;
 }
 
-type PartiallyGroupedElement =
-  | VirtualUListDerivationCell
-  | { type: "Row"; row: VirtualUListDerivationRow };
+type PartiallyGroupedElement = VLayoutCell | { type: "Row"; row: VLayoutRow };
 
 function partialGroupRange(
   elem: PartiallyGroupedElement,
@@ -184,7 +179,7 @@ function groupPartially(
     }
     if (i - start >= ROW_ALIGN_THRESHOLD) {
       const aligned = Math.floor(startElement / ROW_ALIGN) * ROW_ALIGN;
-      const group: VirtualUListDerivationCell[] = Array.from(
+      const group: VLayoutCell[] = Array.from(
         { length: ROW_ALIGN },
         (_, i) => ({ type: "Empty", codePoint: aligned + i }),
       );
@@ -209,11 +204,9 @@ function groupPartially(
 
 function regroupForward(
   partialGroups: readonly PartiallyGroupedElement[],
-): readonly VirtualUListDerivationRow[] {
-  const grouped: VirtualUListDerivationRow[] = [];
-  let currentRow: VirtualUListDerivationCell[] | null = null as
-    | VirtualUListDerivationCell[]
-    | null;
+): readonly VLayoutRow[] {
+  const grouped: VLayoutRow[] = [];
+  let currentRow: VLayoutCell[] | null = null as VLayoutCell[] | null;
   const flush = (last = false) => {
     if (currentRow != null) {
       while (!last && currentRow.length < ROW_ALIGN) {
@@ -249,11 +242,9 @@ function regroupForward(
 
 function regroupBackward(
   partialGroups: readonly PartiallyGroupedElement[],
-): readonly VirtualUListDerivationRow[] {
-  const groupedReversed: VirtualUListDerivationRow[] = [];
-  let currentRowReversed: VirtualUListDerivationCell[] | null = null as
-    | VirtualUListDerivationCell[]
-    | null;
+): readonly VLayoutRow[] {
+  const groupedReversed: VLayoutRow[] = [];
+  let currentRowReversed: VLayoutCell[] | null = null as VLayoutCell[] | null;
   const flush = (last = false) => {
     if (currentRowReversed != null) {
       while (!last && currentRowReversed.length < ROW_ALIGN) {
