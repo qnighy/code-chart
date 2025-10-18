@@ -18,7 +18,6 @@ const EXTRA_KEEPED_LINES = 10;
 export function CodepointList() {
   const {
     listData,
-    reverse, // eslint-disable-line @typescript-eslint/no-unused-vars
     backwardExpand,
     forwardExpand,
     backwardCutOff,

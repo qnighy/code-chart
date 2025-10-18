@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useDebugValue,
-  useEffect,
-  useReducer,
-  useState,
-} from "react";
+import { useCallback, useDebugValue, useReducer } from "react";
 import {
   createVirtualList,
   cutOffVirtualList,
@@ -14,7 +8,6 @@ import {
 
 export type UseVirtualListDispatchResult = {
   listData: VirtualList;
-  reverse: boolean;
   backwardExpand: (
     newCps: number[],
     appenderRange: readonly [number, number],
@@ -28,87 +21,41 @@ export type UseVirtualListDispatchResult = {
 };
 
 export function useVirtualListDispatch(): UseVirtualListDispatchResult {
-  const [state, dispatch] = useReducer(queueReducer, {
-    listData: createVirtualList(0),
-    pending: [],
-  });
-  const { listData, pending } = state;
-
-  const enqueue = useCallback((action: ListDataAction) => {
-    dispatch({ type: "ENQUEUE", action });
-  }, []);
-
-  const [reverse, setReverse] = useState(false);
-  const [prevReverse, setPrevReverse] = useState(false);
-
-  useEffect(() => {
-    const pendingReverse =
-      pending.length === 0 ? reverse : isActionReverse(pending[0]);
-    if (pendingReverse !== reverse) {
-      setTimeout(() => {
-        setReverse(pendingReverse);
-      }, 10);
-      return;
-    }
-    if (reverse !== prevReverse) {
-      setTimeout(() => {
-        setPrevReverse(reverse);
-      }, 10);
-      return;
-    }
-    if (pending.length > 0) {
-      setTimeout(() => {
-        dispatch({ type: "CONSUME", reverse });
-      }, 10);
-    }
-  }, [pending, reverse, prevReverse]);
+  const [listData, dispatch] = useReducer(
+    listDataReducer,
+    createVirtualList(0),
+  );
 
   const backwardExpand = useCallback(
     (newCps: number[], appenderRange: readonly [number, number]) => {
-      enqueue({ type: "BACKWARD_EXPAND", newCps, appenderRange });
+      dispatch({ type: "BACKWARD_EXPAND", newCps, appenderRange });
     },
-    [enqueue],
+    [],
   );
 
   const forwardExpand = useCallback(
     (newCps: number[], appenderRange: readonly [number, number]) => {
-      enqueue({ type: "FORWARD_EXPAND", newCps, appenderRange });
+      dispatch({ type: "FORWARD_EXPAND", newCps, appenderRange });
     },
-    [enqueue],
+    [],
   );
 
-  const backwardCutOff = useCallback(
-    (cutOff: number, threshold: number) => {
-      if (listData.list.length <= cutOff || listData.list.length <= threshold) {
-        return;
-      }
-      enqueue({ type: "BACKWARD_CUT_OFF", cutOff, threshold });
-    },
-    [enqueue, listData.list.length],
-  );
+  const backwardCutOff = useCallback((cutOff: number, threshold: number) => {
+    dispatch({ type: "BACKWARD_CUT_OFF", cutOff, threshold });
+  }, []);
 
-  const forwardCutOff = useCallback(
-    (cutOff: number, threshold: number) => {
-      if (listData.list.length <= cutOff || listData.list.length <= threshold) {
-        return;
-      }
-      enqueue({ type: "FORWARD_CUT_OFF", cutOff, threshold });
-    },
-    [enqueue, listData.list.length],
-  );
+  const forwardCutOff = useCallback((cutOff: number, threshold: number) => {
+    dispatch({ type: "FORWARD_CUT_OFF", cutOff, threshold });
+  }, []);
 
   useDebugValue({
-    listData: {
-      listSize: listData.list.length,
-      frontier: listData.frontier,
-      current: listData.current,
-    },
-    reverse,
+    listSize: listData.list.length,
+    frontier: listData.frontier,
+    current: listData.current,
   });
 
   return {
     listData,
-    reverse,
     backwardExpand,
     forwardExpand,
     backwardCutOff,
@@ -146,12 +93,6 @@ type ForwardCutOffAction = {
   threshold: number;
 };
 
-function isActionReverse(action: ListDataAction | undefined): boolean {
-  if (!action) return false;
-  const type = action.type;
-  return type === "BACKWARD_EXPAND" || type === "BACKWARD_CUT_OFF";
-}
-
 function listDataReducer(
   state: VirtualList,
   action: ListDataAction,
@@ -161,59 +102,21 @@ function listDataReducer(
     case "FORWARD_EXPAND":
       return expandVirtualList(state, action.newCps, action.appenderRange);
     case "BACKWARD_CUT_OFF":
-    case "FORWARD_CUT_OFF":
+    case "FORWARD_CUT_OFF": {
+      if (
+        state.list.length <= action.cutOff ||
+        state.list.length <= action.threshold
+      ) {
+        return state;
+      }
       return cutOffVirtualList(
         state,
         action.cutOff,
         action.threshold,
         action.type === "BACKWARD_CUT_OFF" ? "backward" : "forward",
       );
+    }
     default:
       return state;
-  }
-}
-
-type QueueState = {
-  listData: VirtualList;
-  pending: ListDataAction[];
-};
-
-type QueueAction = EnqueueAction | ConsumeAction;
-
-type EnqueueAction = {
-  type: "ENQUEUE";
-  action: ListDataAction;
-};
-
-type ConsumeAction = {
-  type: "CONSUME";
-  reverse: boolean;
-};
-
-function queueReducer(state: QueueState, action: QueueAction): QueueState {
-  switch (action.type) {
-    case "ENQUEUE":
-      return {
-        ...state,
-        pending: [...state.pending, action.action],
-      };
-    case "CONSUME": {
-      let newListData = state.listData;
-      let i = 0;
-      while (i < state.pending.length) {
-        const pendingAction = state.pending[i]!;
-        const isReverse = isActionReverse(pendingAction);
-        if (isReverse !== action.reverse) {
-          break;
-        }
-        newListData = listDataReducer(newListData, pendingAction);
-        i++;
-      }
-      return {
-        ...state,
-        listData: newListData,
-        pending: state.pending.slice(i),
-      };
-    }
   }
 }
