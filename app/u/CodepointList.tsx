@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
@@ -94,8 +94,6 @@ export function CodepointList() {
     [backwardCutOff, forwardCutOff],
   );
 
-  const scrollRootRef = useRef<HTMLDivElement | null>(null);
-
   const requestLoadMoreBefore = useCallback(() => {
     clearLines("forward");
     loadMoreBefore();
@@ -112,18 +110,13 @@ export function CodepointList() {
     (range: { startIndex: number; endIndex: number }) => {
       numLinesShown.current = range.endIndex - range.startIndex;
 
-      if (range.startIndex <= 0 && layoutData.hasLowFrontier) {
-        // Compensation for oft-misbehaving Virtuoso's startReached callback.
-        vlistRef.current?.scrollToIndex({ align: "start", index: 1 });
-        requestLoadMoreBefore();
-      }
-
       const middleIndex =
         Math.floor((range.startIndex + range.endIndex) / 2) - layoutData.offset;
       if (middleIndex < 0 || middleIndex >= layoutData.rows.length) {
         return;
       }
       const middleRow = layoutData.rows[middleIndex];
+      setInitializePosition(false);
       updateUrlWithPosition(middleRow.range[0]);
     },
     [layoutData, requestLoadMoreBefore],
@@ -136,6 +129,8 @@ export function CodepointList() {
     loadMoreBefore();
     loadMoreAfter();
   }, [loadMoreBefore, loadMoreAfter]);
+
+  const [initializePosition, setInitializePosition] = useState(true);
 
   // Parse codepoint from query parameter
   const cpParam = searchParams.get("cp");
@@ -186,19 +181,23 @@ export function CodepointList() {
   const showBottomShimmer = layoutData.hasHighFrontier;
 
   return (
-    <div ref={scrollRootRef}>
+    <div>
       <Virtuoso
         ref={vlistRef}
         firstItemIndex={layoutData.offset}
         data={layoutData.rows}
         style={{ height: "calc(100vh - 200px)" }}
-        initialTopMostItemIndex={{
-          align: "center",
-          index: Math.min(
-            layoutData.currentRowIndex,
-            layoutData.rows.length - 1,
-          ),
-        }}
+        {...(initializePosition
+          ? {
+              initialTopMostItemIndex: {
+                align: "center",
+                index: Math.min(
+                  layoutData.currentRowIndex,
+                  layoutData.rows.length - 1,
+                ),
+              },
+            }
+          : {})}
         rangeChanged={onRangeChanged}
         startReached={requestLoadMoreBefore}
         endReached={requestLoadMoreAfter}
