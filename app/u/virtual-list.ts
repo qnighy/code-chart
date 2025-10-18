@@ -1,5 +1,5 @@
 /**
- * Keeps track of a bidirectionally paginatable list with a current position.
+ * Keeps track of a bidirectionally paginatable list.
  */
 export type VirtualList = {
   /**
@@ -11,17 +11,12 @@ export type VirtualList = {
    * The half-open range of values where the list is known to be complete.
    */
   readonly frontier: readonly [low: number, high: number];
-  /**
-   * The current position, as a value comparable to a value in `list`.
-   */
-  readonly current: number;
 };
 
 export function createVirtualList(init: number): VirtualList {
   return {
     list: [],
     frontier: [init, init],
-    current: init,
   };
 }
 
@@ -80,16 +75,6 @@ export function cutOffVirtualList(
   }
 }
 
-export function moveVirtualListTo(
-  list: VirtualList,
-  newCurrent: number,
-): VirtualList {
-  return {
-    ...list,
-    current: newCurrent,
-  };
-}
-
 export type VirtualListDerivation = readonly VirtualListDerivationRow[];
 export type VirtualListDerivationRow = readonly VirtualListDerivationCell[];
 export type VirtualListDerivationCell =
@@ -106,6 +91,7 @@ const RANGE_HIGH = 0x110000;
 
 export function getVirtualListDerivation(
   list: VirtualList,
+  current: number,
 ): VirtualListDerivation {
   const hasLowFrontier = list.frontier[0] > RANGE_LOW;
   const hasHighFrontier = list.frontier[1] < RANGE_HIGH;
@@ -113,7 +99,7 @@ export function getVirtualListDerivation(
   const partialGroups = groupPartially(list.list);
   let partitionPos = partialGroups.findIndex((elem) => {
     const [, end] = partialGroupRange(elem);
-    return end > list.current;
+    return end > current;
   });
   if (partitionPos === -1) {
     partitionPos = partialGroups.length;

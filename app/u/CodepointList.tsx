@@ -11,21 +11,30 @@ import { LoaderCell } from "./LoaderCell";
 import { useIntersectionObserver } from "./useIntersectionObserver";
 import { getVirtualListDerivation } from "./virtual-list";
 import { useVirtualListDispatch } from "./useVirtualListDispatch";
+import { codePointHex } from "../lib/unicode";
 
 const MIN_KEEPED_LINES = 128;
 const EXTRA_KEEPED_LINES = 10;
 
 export function CodepointList() {
+  const searchParams = useSearchParams();
+
+  const currentPositionParam = searchParams.get("current");
+  const currentPos = currentPositionParam
+    ? parseCPNumber(currentPositionParam)
+    : null;
+
   const {
     listData,
     backwardExpand,
     forwardExpand,
     backwardCutOff,
     forwardCutOff,
-  } = useVirtualListDispatch();
+  } = useVirtualListDispatch(currentPos ?? 0);
+
   const derivedList = useMemo(
-    () => getVirtualListDerivation(listData),
-    [listData],
+    () => getVirtualListDerivation(listData, currentPos ?? 0),
+    [listData, currentPos],
   );
   const vlistRef = useRef<VirtuosoHandle>(null);
 
@@ -94,8 +103,18 @@ export function CodepointList() {
   const onRangeChanged = useCallback(
     (range: { startIndex: number; endIndex: number }) => {
       numLinesShown.current = range.endIndex - range.startIndex;
+
+      const middleIndex = Math.floor((range.startIndex + range.endIndex) / 2);
+      if (middleIndex < 0 || middleIndex >= derivedList.length) {
+        return;
+      }
+      const middleRow = derivedList[middleIndex];
+      const middleCp = middleRow.find((elem) => typeof elem === "number");
+      if (middleCp != null) {
+        updateUrlWithPosition(middleCp);
+      }
     },
-    [],
+    [derivedList],
   );
 
   const initialLoadDone = useRef(false);
@@ -105,8 +124,6 @@ export function CodepointList() {
     loadMoreBefore();
     loadMoreAfter();
   }, [loadMoreBefore, loadMoreAfter]);
-
-  const searchParams = useSearchParams();
 
   // Parse codepoint from query parameter
   const cpParam = searchParams.get("cp");
@@ -230,6 +247,20 @@ function updateUrlWithCodepoint(cpHex: string | null) {
     params.set("cp", cpHex);
   } else {
     params.delete("cp");
+  }
+  const queryString = params.toString();
+  const pathname = window.location.pathname;
+  const hash = window.location.hash;
+  const newUrl = `${pathname}${queryString ? `?${queryString}` : ""}${hash}`;
+  window.history.replaceState(null, "", newUrl);
+}
+
+function updateUrlWithPosition(position: number | null) {
+  const params = new URLSearchParams(window.location.search);
+  if (position != null) {
+    params.set("current", codePointHex(position));
+  } else {
+    params.delete("current");
   }
   const queryString = params.toString();
   const pathname = window.location.pathname;

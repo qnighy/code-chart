@@ -20,10 +20,12 @@ export type UseVirtualListDispatchResult = {
   forwardCutOff: (cutOff: number, threshold: number) => void;
 };
 
-export function useVirtualListDispatch(): UseVirtualListDispatchResult {
+export function useVirtualListDispatch(
+  init: number,
+): UseVirtualListDispatchResult {
   const [listData, dispatch] = useReducer(
     listDataReducer,
-    createVirtualList(0),
+    createVirtualList(init),
   );
 
   const backwardExpand = useCallback(
@@ -51,7 +53,6 @@ export function useVirtualListDispatch(): UseVirtualListDispatchResult {
   useDebugValue({
     listSize: listData.list.length,
     frontier: listData.frontier,
-    current: listData.current,
   });
 
   return {
