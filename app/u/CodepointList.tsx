@@ -60,43 +60,50 @@ export function CodepointList() {
     forwardExpand(newCps, [frontier, loadTo]);
   }, [forwardExpand, listData]);
 
-  const clearLines = (dir: "backward" | "forward") => {
-    const size =
-      16 *
-      Math.max(
-        MIN_KEEPED_LINES,
-        numLinesShown.current * 2 + EXTRA_KEEPED_LINES,
-      );
-    if (dir === "backward") {
-      backwardCutOff(size, size);
-    } else {
-      forwardCutOff(size, size);
-    }
-  };
+  const clearLines = useCallback(
+    (dir: "backward" | "forward") => {
+      const size =
+        16 *
+        Math.max(
+          MIN_KEEPED_LINES,
+          numLinesShown.current * 2 + EXTRA_KEEPED_LINES,
+        );
+      if (dir === "backward") {
+        backwardCutOff(size, size);
+      } else {
+        forwardCutOff(size, size);
+      }
+    },
+    [backwardCutOff, forwardCutOff],
+  );
 
   const scrollRootRef = useRef<HTMLDivElement | null>(null);
 
-  // Create two shared IntersectionObservers for loader cells using the hook
-  const loaderBeforeObserver = useIntersectionObserver(
-    (entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) {
-        vlistRef.current?.scrollBy({ top: 200 });
-        clearLines("forward");
-        loadMoreBefore();
-      }
-    },
-    { rootRef: scrollRootRef, rootMargin: "2048px" },
-  );
+  const requestLoadMoreBefore = useCallback(() => {
+    clearLines("forward");
+    loadMoreBefore();
+  }, [clearLines, loadMoreBefore]);
 
-  const loaderAfterObserver = useIntersectionObserver(
-    (entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) {
-        clearLines("backward");
-        loadMoreAfter();
-      }
-    },
-    { rootRef: scrollRootRef, rootMargin: "2048px" },
-  );
+  const requestLoadMoreAfter = useCallback(() => {
+    clearLines("backward");
+    loadMoreAfter();
+  }, [clearLines, loadMoreAfter]);
+
+  // These observers are the "last resort" handlers.
+  // In a usual situation, the Virtuoso's startReached and endReached
+  // props should be sufficient to trigger loading more items.
+
+  const loaderBeforeObserver = useIntersectionObserver((entries) => {
+    if (entries.some((entry) => entry.isIntersecting)) {
+      requestLoadMoreBefore();
+    }
+  });
+
+  const loaderAfterObserver = useIntersectionObserver((entries) => {
+    if (entries.some((entry) => entry.isIntersecting)) {
+      requestLoadMoreAfter();
+    }
+  });
 
   // Used for cache removal as a hint to how many lines should be kept
   const numLinesShown = useRef(0);
@@ -174,6 +181,8 @@ export function CodepointList() {
         data={derivedList}
         style={{ height: "calc(100vh - 200px)" }}
         rangeChanged={onRangeChanged}
+        startReached={requestLoadMoreBefore}
+        endReached={requestLoadMoreAfter}
         increaseViewportBy={{ top: 400, bottom: 400 }}
         itemContent={(_rowIndex, row) => {
           const firstCell = row.cells[0]!;
