@@ -51,7 +51,7 @@ export function useVirtualUListDispatch(
   }, []);
 
   useDebugValue({
-    listSize: listData.list.length,
+    listSize: listData.codePoints.length,
     frontier: listData.frontier,
   });
 
@@ -105,8 +105,8 @@ function listDataReducer(
     case "BACKWARD_CUT_OFF":
     case "FORWARD_CUT_OFF": {
       if (
-        state.list.length <= action.cutOff ||
-        state.list.length <= action.threshold
+        state.codePoints.length <= action.cutOff ||
+        state.codePoints.length <= action.threshold
       ) {
         return state;
       }

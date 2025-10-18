@@ -3,31 +3,30 @@
  */
 export type VirtualUList = {
   /**
-   * The view containing a consecutive part of the list
-   * with known items.
+   * The known code points in the list, sorted in ascending order.
    */
-  readonly list: readonly number[];
+  readonly codePoints: readonly number[];
   /**
-   * The half-open range of values where the list is known to be complete.
+   * The half-open range of codepoints where the list is known to be complete.
    */
   readonly frontier: readonly [low: number, high: number];
 };
 
 export function createVirtualUList(init: number): VirtualUList {
   return {
-    list: [],
+    codePoints: [],
     frontier: [init, init],
   };
 }
 
 export function expandVirtualUList(
   list: VirtualUList,
-  append: readonly number[],
+  appendCodePoints: readonly number[],
   appenderRange: readonly [low: number, high: number],
 ): VirtualUList {
-  const newListBody = Array.from(new Set([...list.list, ...append])).sort(
-    (a, b) => a - b,
-  );
+  const newListBody = Array.from(
+    new Set([...list.codePoints, ...appendCodePoints]),
+  ).sort((a, b) => a - b);
   const consective =
     appenderRange[0] <= list.frontier[1] &&
     appenderRange[1] >= list.frontier[0];
@@ -39,7 +38,7 @@ export function expandVirtualUList(
     : list.frontier;
   const newList: VirtualUList = {
     ...list,
-    list: newListBody,
+    codePoints: newListBody,
     frontier: newFrontier,
   };
   return newList;
@@ -51,23 +50,26 @@ export function cutOffVirtualUList(
   threshold: number,
   dir: "backward" | "forward",
 ): VirtualUList {
-  if (list.list.length <= cutOff || list.list.length <= threshold) {
+  if (list.codePoints.length <= cutOff || list.codePoints.length <= threshold) {
     return list;
   }
   if (dir === "backward") {
-    const index = list.list.length - cutOff;
-    const newFrontier = Math.max(list.frontier[0], list.list[index - 1]! + 1);
+    const index = list.codePoints.length - cutOff;
+    const newFrontier = Math.max(
+      list.frontier[0],
+      list.codePoints[index - 1]! + 1,
+    );
     return {
       ...list,
-      list: list.list.slice(index),
+      codePoints: list.codePoints.slice(index),
       frontier: [newFrontier, list.frontier[1]],
     };
   } else {
     const index = cutOff;
-    const newFrontier = Math.min(list.frontier[1], list.list[index]!);
+    const newFrontier = Math.min(list.frontier[1], list.codePoints[index]!);
     return {
       ...list,
-      list: list.list.slice(0, index),
+      codePoints: list.codePoints.slice(0, index),
       frontier: [list.frontier[0], newFrontier],
     };
   }
@@ -75,22 +77,25 @@ export function cutOffVirtualUList(
 
 export type VirtualUListDerivation = readonly VirtualUListDerivationRow[];
 export type VirtualUListDerivationRow = readonly VirtualUListDerivationCell[];
-export type VirtualUListDerivationCell = NumberedCell | LoadingCell | EmptyCell;
+export type VirtualUListDerivationCell =
+  | CodePointCell
+  | LoadingCell
+  | EmptyCell;
 
-export type NumberedCell = {
-  type: "Numbered";
-  value: number;
+export type CodePointCell = {
+  type: "CodePoint";
+  codePoint: number;
 };
 
 export type LoadingCell = {
   type: "Loading";
-  value: number;
+  codePoint: number;
   direction: "before" | "after";
 };
 
 export type EmptyCell = {
   type: "Empty";
-  value: number;
+  codePoint: number;
 };
 
 const ROW_ALIGN = 16;
@@ -106,7 +111,7 @@ export function getVirtualUListDerivation(
   const hasLowFrontier = list.frontier[0] > RANGE_LOW;
   const hasHighFrontier = list.frontier[1] < RANGE_HIGH;
 
-  const partialGroups = groupPartially(list.list);
+  const partialGroups = groupPartially(list.codePoints);
   let partitionPos = partialGroups.findIndex((elem) => {
     const [, end] = partialGroupRange(elem);
     return end > current;
@@ -119,16 +124,16 @@ export function getVirtualUListDerivation(
   if (hasLowFrontier) {
     const prepender: PartiallyGroupedElement[] = [];
     for (let i = 0; i < LOADER_ROWS * ROW_ALIGN; i++) {
-      const value = list.frontier[0] - LOADER_ROWS * ROW_ALIGN + i;
-      prepender.push({ type: "Loading", value, direction: "before" });
+      const codePoint = list.frontier[0] - LOADER_ROWS * ROW_ALIGN + i;
+      prepender.push({ type: "Loading", codePoint, direction: "before" });
     }
     partialGroupsPrecede.unshift(...prepender);
   }
   if (hasHighFrontier) {
     const appender: PartiallyGroupedElement[] = [];
     for (let i = 0; i < LOADER_ROWS * ROW_ALIGN; i++) {
-      const value = list.frontier[1] + i;
-      appender.push({ type: "Loading", value, direction: "after" });
+      const codePoint = list.frontier[1] + i;
+      appender.push({ type: "Loading", codePoint, direction: "after" });
     }
     partialGroupsFollow.push(...appender);
   }
@@ -147,16 +152,16 @@ function partialGroupRange(
   elem: PartiallyGroupedElement,
 ): readonly [number, number] {
   if (
-    elem.type === "Numbered" ||
+    elem.type === "CodePoint" ||
     elem.type === "Loading" ||
     elem.type === "Empty"
   ) {
-    return [elem.value, elem.value + 1];
+    return [elem.codePoint, elem.codePoint + 1];
   } else {
     if (elem.row.length === 0) {
       throw new TypeError("Unexpected empty partial group");
     }
-    const start = Math.floor(elem.row[0]!.value / ROW_ALIGN) * ROW_ALIGN;
+    const start = Math.floor(elem.row[0]!.codePoint / ROW_ALIGN) * ROW_ALIGN;
     return [start, start + ROW_ALIGN];
   }
 }
@@ -181,20 +186,21 @@ function groupPartially(
       const aligned = Math.floor(startElement / ROW_ALIGN) * ROW_ALIGN;
       const group: VirtualUListDerivationCell[] = Array.from(
         { length: ROW_ALIGN },
-        (_, i) => ({ type: "Empty", value: aligned + i }),
+        (_, i) => ({ type: "Empty", codePoint: aligned + i }),
       );
       for (let j = start; j < i; j++) {
         const el = elements[j]!;
-        group[el % ROW_ALIGN] = { type: "Numbered", value: el };
+        group[el % ROW_ALIGN] = { type: "CodePoint", codePoint: el };
       }
       grouped.push({ type: "Row", row: group });
     } else {
       grouped.push(
-        ...elements
-          .slice(start, i)
-          .map(
-            (el): PartiallyGroupedElement => ({ type: "Numbered", value: el }),
-          ),
+        ...elements.slice(start, i).map(
+          (el): PartiallyGroupedElement => ({
+            type: "CodePoint",
+            codePoint: el,
+          }),
+        ),
       );
     }
   }
@@ -213,7 +219,7 @@ function regroupForward(
       while (!last && currentRow.length < ROW_ALIGN) {
         currentRow.push({
           type: "Empty",
-          value: currentRow[currentRow.length - 1]!.value + 1,
+          codePoint: currentRow[currentRow.length - 1]!.codePoint + 1,
         });
       }
       grouped.push(currentRow);
@@ -223,7 +229,7 @@ function regroupForward(
 
   for (const elem of partialGroups) {
     if (
-      elem.type === "Numbered" ||
+      elem.type === "CodePoint" ||
       elem.type === "Loading" ||
       elem.type === "Empty"
     ) {
@@ -253,7 +259,8 @@ function regroupBackward(
       while (!last && currentRowReversed.length < ROW_ALIGN) {
         currentRowReversed.push({
           type: "Empty",
-          value: currentRowReversed[currentRowReversed.length - 1]!.value + 1,
+          codePoint:
+            currentRowReversed[currentRowReversed.length - 1]!.codePoint + 1,
         });
       }
       groupedReversed.push(currentRowReversed.toReversed());
@@ -263,7 +270,7 @@ function regroupBackward(
 
   for (const elem of partialGroups.toReversed()) {
     if (
-      elem.type === "Numbered" ||
+      elem.type === "CodePoint" ||
       elem.type === "Loading" ||
       elem.type === "Empty"
     ) {

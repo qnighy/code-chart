@@ -179,22 +179,22 @@ export function CodepointList() {
         rangeChanged={onRangeChanged}
         increaseViewportBy={{ top: 400, bottom: 400 }}
         itemContent={(_rowIndex, row) => {
-          const firstCode = row[0]!.value;
+          const firstCode = row[0]!.codePoint;
           const key = `row-${row[0]!.type}-${firstCode}`;
           return (
             <div key={key} className="flex flex-wrap gap-2 mb-2">
-              {row.map((cell, cellIndex) => {
+              {row.map((cell) => {
                 if (cell.type === "Empty") {
                   return (
                     <div
-                      key={`e-${cell.value}`}
+                      key={`e-${cell.codePoint}`}
                       className="aspect-square w-16"
                     />
                   );
                 } else if (cell.type === "Loading") {
                   return (
                     <LoaderCell
-                      key={`ld-${cell.direction}-${cell.value}`}
+                      key={`ld-${cell.direction}-${cell.codePoint}`}
                       observer={
                         cell.direction === "before"
                           ? loaderBeforeObserver
@@ -204,18 +204,18 @@ export function CodepointList() {
                   );
                 }
 
-                const cpHex = formatCPNumber(cell.value);
+                const cpHex = formatCPNumber(cell.codePoint);
 
                 return (
                   <Link
-                    key={cell.value}
+                    key={cell.codePoint}
                     href={`/u/${cpHex}`}
-                    onClick={(e) => handleLinkClick(e, cell.value)}
+                    onClick={(e) => handleLinkClick(e, cell.codePoint)}
                     className="aspect-square border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center relative group w-16"
                   >
                     <div className="text-center">
                       <CharacterDisplay
-                        codePoint={cell.value}
+                        codePoint={cell.codePoint}
                         className="text-2xl sm:text-3xl md:text-4xl"
                         replacementClassName="text-gray-400 dark:text-gray-500"
                       />
