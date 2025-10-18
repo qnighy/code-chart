@@ -109,10 +109,7 @@ export function CodepointList() {
         return;
       }
       const middleRow = derivedList[middleIndex];
-      const middleCp = middleRow.find((elem) => typeof elem === "number");
-      if (middleCp != null) {
-        updateUrlWithPosition(middleCp);
-      }
+      updateUrlWithPosition(middleRow.range[0]);
     },
     [derivedList],
   );
@@ -179,22 +176,26 @@ export function CodepointList() {
         rangeChanged={onRangeChanged}
         increaseViewportBy={{ top: 400, bottom: 400 }}
         itemContent={(_rowIndex, row) => {
-          const firstCode = row[0]!.codePoint;
-          const key = `row-${row[0]!.type}-${firstCode}`;
+          const firstCell = row.cells[0]!;
+          const firstCode = row.range[0];
+          const key =
+            firstCell.type === "Loading"
+              ? `row-${codePointHex(firstCode)}-${firstCell.offset}`
+              : `row-${codePointHex(firstCode)}`;
           return (
             <div key={key} className="flex flex-wrap gap-2 mb-2">
-              {row.map((cell) => {
+              {row.cells.map((cell) => {
                 if (cell.type === "Empty") {
                   return (
                     <div
-                      key={`e-${cell.codePoint}-${cell.offset}`}
+                      key={`e-${codePointHex(cell.codePoint)}-${cell.offset}`}
                       className="aspect-square w-16"
                     />
                   );
                 } else if (cell.type === "Loading") {
                   return (
                     <LoaderCell
-                      key={`ld-${cell.direction}-${cell.codePoint}-${cell.offset}`}
+                      key={`ld-${codePointHex(cell.codePoint)}-${cell.offset}`}
                       observer={
                         cell.direction === "before"
                           ? loaderBeforeObserver
@@ -208,7 +209,7 @@ export function CodepointList() {
 
                 return (
                   <Link
-                    key={cell.codePoint}
+                    key={codePointHex(cell.codePoint)}
                     href={`/u/${cpHex}`}
                     onClick={(e) => handleLinkClick(e, cell.codePoint)}
                     className="aspect-square border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center relative group w-16"

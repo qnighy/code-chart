@@ -76,7 +76,11 @@ export function cutOffVirtualUList(
 }
 
 export type VLayout = readonly VLayoutRow[];
-export type VLayoutRow = readonly VLayoutCell[];
+export type VLayoutRow = {
+  readonly type: "Row";
+  readonly cells: readonly VLayoutCell[];
+  readonly range: readonly [number, number];
+};
 export type VLayoutCell = CodePointCell | LoadingCell | EmptyCell;
 
 export type CodePointCell = {
@@ -151,7 +155,7 @@ export function layoutVirtualUList(
   return grouped;
 }
 
-type PartiallyGroupedElement = VLayoutCell | { type: "Row"; row: VLayoutRow };
+type PartiallyGroupedElement = VLayoutCell | VLayoutRow;
 
 function partialGroupRange(
   elem: PartiallyGroupedElement,
@@ -163,10 +167,10 @@ function partialGroupRange(
   ) {
     return [elem.codePoint, elem.codePoint + 1];
   } else {
-    if (elem.row.length === 0) {
+    if (elem.cells.length === 0) {
       throw new TypeError("Unexpected empty partial group");
     }
-    const start = Math.floor(elem.row[0]!.codePoint / ROW_ALIGN) * ROW_ALIGN;
+    const start = Math.floor(elem.cells[0]!.codePoint / ROW_ALIGN) * ROW_ALIGN;
     return [start, start + ROW_ALIGN];
   }
 }
@@ -201,7 +205,11 @@ function groupPartially(
         const el = elements[j]!;
         group[el % ROW_ALIGN] = { type: "CodePoint", codePoint: el };
       }
-      grouped.push({ type: "Row", row: group });
+      grouped.push({
+        type: "Row",
+        cells: group,
+        range: [aligned, aligned + ROW_ALIGN],
+      });
     } else {
       grouped.push(
         ...elements.slice(start, i).map(
@@ -232,7 +240,14 @@ function regroupForward(
           offset: prevOffset + 1,
         });
       }
-      grouped.push(currentRow);
+      grouped.push({
+        type: "Row",
+        cells: currentRow,
+        range: [
+          currentRow[0]!.codePoint,
+          currentRow[currentRow.length - 1]!.codePoint + 1,
+        ],
+      });
       currentRow = null;
     }
   };
@@ -250,7 +265,7 @@ function regroupForward(
       currentRow.push(elem);
     } else {
       flush();
-      grouped.push(elem.row);
+      grouped.push(elem);
     }
   }
   flush(true);
@@ -273,7 +288,14 @@ function regroupBackward(
           offset: prevOffset - 1,
         });
       }
-      groupedReversed.push(currentRowReversed.toReversed());
+      groupedReversed.push({
+        type: "Row",
+        cells: currentRowReversed.toReversed(),
+        range: [
+          currentRowReversed[currentRowReversed.length - 1]!.codePoint,
+          currentRowReversed[0]!.codePoint + 1,
+        ],
+      });
       currentRowReversed = null;
     }
   };
@@ -294,7 +316,7 @@ function regroupBackward(
       currentRowReversed.push(elem);
     } else {
       flush();
-      groupedReversed.push(elem.row);
+      groupedReversed.push(elem);
     }
   }
   flush(true);
