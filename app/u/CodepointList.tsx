@@ -16,6 +16,22 @@ import { codePointHex } from "../lib/unicode";
 const MIN_KEEPED_LINES = 128;
 const EXTRA_KEEPED_LINES = 10;
 
+function ShimmerHeader() {
+  return (
+    <div className="w-full mb-2">
+      <div className="h-[4.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
+    </div>
+  );
+}
+
+function ShimmerFooter() {
+  return (
+    <div className="w-full mt-2">
+      <div className="h-[4.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
+    </div>
+  );
+}
+
 export function CodepointList() {
   const searchParams = useSearchParams();
 
@@ -178,6 +194,9 @@ export function CodepointList() {
     updateUrlWithCodepoint(cpHex);
   };
 
+  const showTopShimmer = listData.frontier[0] > 0;
+  const showBottomShimmer = listData.frontier[1] < 0x110000;
+
   return (
     <div ref={scrollRootRef}>
       <Virtuoso
@@ -189,6 +208,10 @@ export function CodepointList() {
         endReached={requestLoadMoreAfter}
         increaseViewportBy={{ top: 400, bottom: 400 }}
         overscan={{ main: 2000, reverse: 2000 }}
+        components={{
+          Header: showTopShimmer ? ShimmerHeader : undefined,
+          Footer: showBottomShimmer ? ShimmerFooter : undefined,
+        }}
         itemContent={(_rowIndex, row) => {
           const firstCell = row.cells[0]!;
           const firstCode = row.range[0];
