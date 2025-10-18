@@ -8,7 +8,6 @@ import { CharacterDisplay } from "./CharacterDisplay";
 import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
 import { LoaderCell } from "./LoaderCell";
-import { useIntersectionObserver } from "./useIntersectionObserver";
 import { layoutVirtualUList } from "./virtual-ulist";
 import { useVirtualUListDispatch } from "./useVirtualUListDispatch";
 import { codePointHex } from "../lib/unicode";
@@ -108,22 +107,6 @@ export function CodepointList() {
     clearLines("backward");
     loadMoreAfter();
   }, [clearLines, loadMoreAfter]);
-
-  // These observers are the "last resort" handlers.
-  // In a usual situation, the Virtuoso's startReached and endReached
-  // props should be sufficient to trigger loading more items.
-
-  const loaderBeforeObserver = useIntersectionObserver((entries) => {
-    if (entries.some((entry) => entry.isIntersecting)) {
-      requestLoadMoreBefore();
-    }
-  });
-
-  const loaderAfterObserver = useIntersectionObserver((entries) => {
-    if (entries.some((entry) => entry.isIntersecting)) {
-      requestLoadMoreAfter();
-    }
-  });
 
   // Used for cache removal as a hint to how many lines should be kept
   const numLinesShown = useRef(0);
@@ -233,11 +216,6 @@ export function CodepointList() {
                   return (
                     <LoaderCell
                       key={`ld-${codePointHex(cell.codePoint)}-${cell.offset}`}
-                      observer={
-                        cell.direction === "before"
-                          ? loaderBeforeObserver
-                          : loaderAfterObserver
-                      }
                     />
                   );
                 }
