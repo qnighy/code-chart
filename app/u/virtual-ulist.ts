@@ -76,6 +76,7 @@ export function cutOffVirtualUList(
 
 export type VLayout = {
   rows: readonly VLayoutRow[];
+  currentRowIndex: number;
   hasLowFrontier: boolean;
   hasHighFrontier: boolean;
 };
@@ -120,11 +121,11 @@ export function layoutVirtualUList(
   }
   const partialGroupsPrecede = partialGroups.slice(0, partitionPos);
   const partialGroupsFollow = partialGroups.slice(partitionPos);
-  const grouped: VLayoutRow[] = [
-    ...regroupBackward(partialGroupsPrecede, hasLowFrontier),
-    ...regroupForward(partialGroupsFollow, hasHighFrontier),
-  ];
-  return { rows: grouped, hasLowFrontier, hasHighFrontier };
+  const groupsPrecede = regroupBackward(partialGroupsPrecede, hasLowFrontier);
+  const groupsFollow = regroupForward(partialGroupsFollow, hasHighFrontier);
+  const grouped: VLayoutRow[] = [...groupsPrecede, ...groupsFollow];
+  const currentRowIndex = groupsPrecede.length;
+  return { rows: grouped, hasLowFrontier, hasHighFrontier, currentRowIndex };
 }
 
 type PartiallyGroupedElement = VLayoutCell | VLayoutRow;

@@ -192,11 +192,18 @@ export function CodepointList() {
         ref={vlistRef}
         data={layoutData.rows}
         style={{ height: "calc(100vh - 200px)" }}
+        initialTopMostItemIndex={{
+          align: "center",
+          index: Math.min(
+            layoutData.currentRowIndex,
+            layoutData.rows.length - 1,
+          ),
+        }}
         rangeChanged={onRangeChanged}
         startReached={requestLoadMoreBefore}
         endReached={requestLoadMoreAfter}
         increaseViewportBy={{ top: 400, bottom: 400 }}
-        overscan={{ main: 2000, reverse: 2000 }}
+        overscan={{ main: 1000, reverse: 1000 }}
         components={{
           Header: showTopShimmer ? ShimmerHeader : undefined,
           Footer: showBottomShimmer ? ShimmerFooter : undefined,
