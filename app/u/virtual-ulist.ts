@@ -125,7 +125,7 @@ export function layoutVirtualUList(
     for (let i = 0; i < LOADER_ROWS * ROW_ALIGN; i++) {
       prepender.push({
         type: "Loading",
-        codePoint: list.frontier[0],
+        codePoint: list.frontier[0] - 1,
         offset: i - (LOADER_ROWS * ROW_ALIGN - 1),
         direction: "before",
       });
