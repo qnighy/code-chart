@@ -13,6 +13,7 @@ import { getVirtualListDerivation } from "./virtual-list";
 import { useVirtualListDispatch } from "./useVirtualListDispatch";
 
 const MIN_KEEPED_LINES = 128;
+const EXTRA_KEEPED_LINES = 10;
 
 export function CodepointList() {
   const {
@@ -52,13 +53,20 @@ export function CodepointList() {
   }, [forwardExpand, listData]);
 
   const clearLines = (dir: "backward" | "forward") => {
-    const size = 16 * Math.max(MIN_KEEPED_LINES, numLinesShown.current * 2);
+    const size =
+      16 *
+      Math.max(
+        MIN_KEEPED_LINES,
+        numLinesShown.current * 2 + EXTRA_KEEPED_LINES,
+      );
     if (dir === "backward") {
       backwardCutOff(size, size);
     } else {
       forwardCutOff(size, size);
     }
   };
+
+  const scrollRootRef = useRef<HTMLDivElement | null>(null);
 
   // Create two shared IntersectionObservers for loader cells using the hook
   const loaderBeforeObserver = useIntersectionObserver(
@@ -69,7 +77,7 @@ export function CodepointList() {
         loadMoreBefore();
       }
     },
-    { rootMargin: "50%" },
+    { rootRef: scrollRootRef, rootMargin: "2048px" },
   );
 
   const loaderAfterObserver = useIntersectionObserver(
@@ -79,7 +87,7 @@ export function CodepointList() {
         loadMoreAfter();
       }
     },
-    { rootMargin: "50%" },
+    { rootRef: scrollRootRef, rootMargin: "2048px" },
   );
 
   // Used for cache removal as a hint to how many lines should be kept
@@ -147,7 +155,7 @@ export function CodepointList() {
   };
 
   return (
-    <>
+    <div ref={scrollRootRef}>
       <Virtuoso
         ref={vlistRef}
         data={derivedList}
@@ -213,7 +221,7 @@ export function CodepointList() {
         onClose={handleCloseModal}
         onNavigate={handleNavigate}
       />
-    </>
+    </div>
   );
 }
 

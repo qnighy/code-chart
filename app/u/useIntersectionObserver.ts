@@ -1,5 +1,11 @@
 import { useEffect, useRef } from "react";
 
+export type UseIntersectionObserverOptions = {
+  rootRef?: React.RefObject<Element | null>;
+  rootMargin?: string;
+  threshold?: number | number[];
+};
+
 /**
  * Custom hook that creates an IntersectionObserver with a stable callback.
  * Uses the useEvent/useEventCallback pattern to avoid recreating the observer
@@ -11,7 +17,7 @@ import { useEffect, useRef } from "react";
  */
 export function useIntersectionObserver(
   callback: (entries: IntersectionObserverEntry[]) => void,
-  options?: IntersectionObserverInit,
+  options?: UseIntersectionObserverOptions,
 ): IntersectionObserver | null {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const callbackRef = useRef(callback);
@@ -24,14 +30,14 @@ export function useIntersectionObserver(
   // Rebuild options object for stable comparison
   const rootMargin = options?.rootMargin;
   const threshold = options?.threshold;
-  const root = options?.root;
+  const rootRef = options?.rootRef;
 
   // Create observer, recreating when options change
   useEffect(() => {
     const observerOptions: IntersectionObserverInit = {
       ...(rootMargin !== undefined && { rootMargin }),
       ...(threshold !== undefined && { threshold }),
-      ...(root !== undefined && { root }),
+      ...(rootRef !== undefined && { root: rootRef.current }),
     };
 
     observerRef.current = new IntersectionObserver((entries) => {
@@ -43,7 +49,7 @@ export function useIntersectionObserver(
       observerRef.current?.disconnect();
       observerRef.current = null;
     };
-  }, [rootMargin, threshold, root]);
+  }, [rootMargin, threshold, rootRef]);
 
   return observerRef.current;
 }
