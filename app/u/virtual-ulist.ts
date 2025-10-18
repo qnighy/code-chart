@@ -201,6 +201,7 @@ export function cutOffVirtualUListBackward(
   const index = list.rows.length - cutOffRows;
   return {
     ...list,
+    offset: list.offset + index,
     rows: list.rows.slice(index),
     lowFrontier: list.rows[index - 1]!.values.at(-1)! + 1,
   };
