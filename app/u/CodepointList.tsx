@@ -187,14 +187,14 @@ export function CodepointList() {
                 if (cell.type === "Empty") {
                   return (
                     <div
-                      key={`e-${cell.codePoint}`}
+                      key={`e-${cell.codePoint}-${cell.offset}`}
                       className="aspect-square w-16"
                     />
                   );
                 } else if (cell.type === "Loading") {
                   return (
                     <LoaderCell
-                      key={`ld-${cell.direction}-${cell.codePoint}`}
+                      key={`ld-${cell.direction}-${cell.codePoint}-${cell.offset}`}
                       observer={
                         cell.direction === "before"
                           ? loaderBeforeObserver
