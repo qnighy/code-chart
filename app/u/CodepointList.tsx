@@ -178,26 +178,25 @@ export function CodepointList() {
         style={{ height: "calc(100vh - 200px)" }}
         rangeChanged={onRangeChanged}
         increaseViewportBy={{ top: 400, bottom: 400 }}
-        itemContent={(rowIndex, row) => {
-          const firstCode = row.find((elem) => typeof elem === "number");
-          const key =
-            firstCode != null ? `row-${firstCode}` : `row-empty-${rowIndex}`;
+        itemContent={(_rowIndex, row) => {
+          const firstCode = row[0]!.value;
+          const key = `row-${row[0]!.type}-${firstCode}`;
           return (
             <div key={key} className="flex flex-wrap gap-2 mb-2">
-              {row.map((cp, cellIndex) => {
-                if (cp === "empty") {
+              {row.map((cell, cellIndex) => {
+                if (cell.type === "Empty") {
                   return (
                     <div
-                      key={`empty-${cellIndex}`}
+                      key={`e-${cell.value}`}
                       className="aspect-square w-16"
                     />
                   );
-                } else if (cp === "loading-before" || cp === "loading-after") {
+                } else if (cell.type === "Loading") {
                   return (
                     <LoaderCell
-                      key={`${cp}-${cellIndex}`}
+                      key={`ld-${cell.direction}-${cell.value}`}
                       observer={
-                        cp === "loading-before"
+                        cell.direction === "before"
                           ? loaderBeforeObserver
                           : loaderAfterObserver
                       }
@@ -205,18 +204,18 @@ export function CodepointList() {
                   );
                 }
 
-                const cpHex = formatCPNumber(cp);
+                const cpHex = formatCPNumber(cell.value);
 
                 return (
                   <Link
-                    key={cp}
+                    key={cell.value}
                     href={`/u/${cpHex}`}
-                    onClick={(e) => handleLinkClick(e, cp)}
+                    onClick={(e) => handleLinkClick(e, cell.value)}
                     className="aspect-square border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center relative group w-16"
                   >
                     <div className="text-center">
                       <CharacterDisplay
-                        codePoint={cp}
+                        codePoint={cell.value}
                         className="text-2xl sm:text-3xl md:text-4xl"
                         replacementClassName="text-gray-400 dark:text-gray-500"
                       />

@@ -77,11 +77,23 @@ export function cutOffVirtualList(
 
 export type VirtualListDerivation = readonly VirtualListDerivationRow[];
 export type VirtualListDerivationRow = readonly VirtualListDerivationCell[];
-export type VirtualListDerivationCell =
-  | number
-  | "loading-before"
-  | "loading-after"
-  | "empty";
+export type VirtualListDerivationCell = NumberedCell | LoadingCell | EmptyCell;
+
+export type NumberedCell = {
+  type: "Numbered";
+  value: number;
+};
+
+export type LoadingCell = {
+  type: "Loading";
+  value: number;
+  direction: "before" | "after";
+};
+
+export type EmptyCell = {
+  type: "Empty";
+  value: number;
+};
 
 const ROW_ALIGN = 16;
 const ROW_ALIGN_THRESHOLD = 8;
@@ -109,14 +121,16 @@ export function getVirtualListDerivation(
   if (hasLowFrontier) {
     const prepender: PartiallyGroupedElement[] = [];
     for (let i = 0; i < LOADER_ROWS * ROW_ALIGN; i++) {
-      prepender.push("loading-before");
+      const value = list.frontier[0] - LOADER_ROWS * ROW_ALIGN + i;
+      prepender.push({ type: "Loading", value, direction: "before" });
     }
     partialGroupsPrecede.unshift(...prepender);
   }
   if (hasHighFrontier) {
     const appender: PartiallyGroupedElement[] = [];
     for (let i = 0; i < LOADER_ROWS * ROW_ALIGN; i++) {
-      appender.push("loading-after");
+      const value = list.frontier[1] + i;
+      appender.push({ type: "Loading", value, direction: "after" });
     }
     partialGroupsFollow.push(...appender);
   }
@@ -129,21 +143,22 @@ export function getVirtualListDerivation(
 
 type PartiallyGroupedElement =
   | VirtualListDerivationCell
-  | VirtualListDerivationRow;
+  | { type: "Row"; row: VirtualListDerivationRow };
 
 function partialGroupRange(
   elem: PartiallyGroupedElement,
 ): readonly [number, number] {
-  if (typeof elem === "number") {
-    return [elem, elem + 1];
-  } else if (typeof elem === "string") {
-    throw new TypeError("Unexpected loading or empty cell in partial group");
+  if (
+    elem.type === "Numbered" ||
+    elem.type === "Loading" ||
+    elem.type === "Empty"
+  ) {
+    return [elem.value, elem.value + 1];
   } else {
-    const el = elem.find((e) => typeof e === "number");
-    if (el == null) {
+    if (elem.row.length === 0) {
       throw new TypeError("Unexpected empty partial group");
     }
-    const start = Math.floor((el as number) / ROW_ALIGN) * ROW_ALIGN;
+    const start = Math.floor(elem.row[0]!.value / ROW_ALIGN) * ROW_ALIGN;
     return [start, start + ROW_ALIGN];
   }
 }
@@ -165,17 +180,24 @@ function groupPartially(
       i++;
     }
     if (i - start >= ROW_ALIGN_THRESHOLD) {
-      const group: (number | "empty")[] = Array.from(
+      const aligned = Math.floor(startElement / ROW_ALIGN) * ROW_ALIGN;
+      const group: VirtualListDerivationCell[] = Array.from(
         { length: ROW_ALIGN },
-        () => "empty",
+        (_, i) => ({ type: "Empty", value: aligned + i }),
       );
       for (let j = start; j < i; j++) {
         const el = elements[j]!;
-        group[el % ROW_ALIGN] = el;
+        group[el % ROW_ALIGN] = { type: "Numbered", value: el };
       }
-      grouped.push(group);
+      grouped.push({ type: "Row", row: group });
     } else {
-      grouped.push(...elements.slice(start, i));
+      grouped.push(
+        ...elements
+          .slice(start, i)
+          .map(
+            (el): PartiallyGroupedElement => ({ type: "Numbered", value: el }),
+          ),
+      );
     }
   }
   return grouped;
@@ -191,7 +213,10 @@ function regroupForward(
   const flush = (last = false) => {
     if (currentRow != null) {
       while (!last && currentRow.length < ROW_ALIGN) {
-        currentRow.push("empty");
+        currentRow.push({
+          type: "Empty",
+          value: currentRow[currentRow.length - 1]!.value + 1,
+        });
       }
       grouped.push(currentRow);
       currentRow = null;
@@ -199,7 +224,11 @@ function regroupForward(
   };
 
   for (const elem of partialGroups) {
-    if (typeof elem === "number" || typeof elem === "string") {
+    if (
+      elem.type === "Numbered" ||
+      elem.type === "Loading" ||
+      elem.type === "Empty"
+    ) {
       if (currentRow != null && currentRow.length >= ROW_ALIGN) {
         flush();
       }
@@ -207,7 +236,7 @@ function regroupForward(
       currentRow.push(elem);
     } else {
       flush();
-      grouped.push(elem);
+      grouped.push(elem.row);
     }
   }
   flush(true);
@@ -224,7 +253,10 @@ function regroupBackward(
   const flush = (last = false) => {
     if (currentRowReversed != null) {
       while (!last && currentRowReversed.length < ROW_ALIGN) {
-        currentRowReversed.push("empty");
+        currentRowReversed.push({
+          type: "Empty",
+          value: currentRowReversed[currentRowReversed.length - 1]!.value + 1,
+        });
       }
       groupedReversed.push(currentRowReversed.toReversed());
       currentRowReversed = null;
@@ -232,7 +264,11 @@ function regroupBackward(
   };
 
   for (const elem of partialGroups.toReversed()) {
-    if (typeof elem === "number" || typeof elem === "string") {
+    if (
+      elem.type === "Numbered" ||
+      elem.type === "Loading" ||
+      elem.type === "Empty"
+    ) {
       if (
         currentRowReversed != null &&
         currentRowReversed.length >= ROW_ALIGN
@@ -243,7 +279,7 @@ function regroupBackward(
       currentRowReversed.push(elem);
     } else {
       flush();
-      groupedReversed.push(elem);
+      groupedReversed.push(elem.row);
     }
   }
   flush(true);
