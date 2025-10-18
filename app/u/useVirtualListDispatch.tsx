@@ -1,13 +1,13 @@
 import { useCallback, useDebugValue, useReducer } from "react";
 import {
-  createVirtualList,
-  cutOffVirtualList,
-  expandVirtualList,
-  type VirtualList,
+  createVirtualUList,
+  cutOffVirtualUList,
+  expandVirtualUList,
+  type VirtualUList,
 } from "./virtual-list";
 
-export type UseVirtualListDispatchResult = {
-  listData: VirtualList;
+export type UseVirtualUListDispatchResult = {
+  listData: VirtualUList;
   backwardExpand: (
     newCps: number[],
     appenderRange: readonly [number, number],
@@ -20,12 +20,12 @@ export type UseVirtualListDispatchResult = {
   forwardCutOff: (cutOff: number, threshold: number) => void;
 };
 
-export function useVirtualListDispatch(
+export function useVirtualUListDispatch(
   init: number,
-): UseVirtualListDispatchResult {
+): UseVirtualUListDispatchResult {
   const [listData, dispatch] = useReducer(
     listDataReducer,
-    createVirtualList(init),
+    createVirtualUList(init),
   );
 
   const backwardExpand = useCallback(
@@ -95,13 +95,13 @@ type ForwardCutOffAction = {
 };
 
 function listDataReducer(
-  state: VirtualList,
+  state: VirtualUList,
   action: ListDataAction,
-): VirtualList {
+): VirtualUList {
   switch (action.type) {
     case "BACKWARD_EXPAND":
     case "FORWARD_EXPAND":
-      return expandVirtualList(state, action.newCps, action.appenderRange);
+      return expandVirtualUList(state, action.newCps, action.appenderRange);
     case "BACKWARD_CUT_OFF":
     case "FORWARD_CUT_OFF": {
       if (
@@ -110,7 +110,7 @@ function listDataReducer(
       ) {
         return state;
       }
-      return cutOffVirtualList(
+      return cutOffVirtualUList(
         state,
         action.cutOff,
         action.threshold,

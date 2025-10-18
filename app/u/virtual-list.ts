@@ -1,7 +1,7 @@
 /**
- * Keeps track of a bidirectionally paginatable list.
+ * Keeps track of a bidirectionally paginatable list of Unicode code points.
  */
-export type VirtualList = {
+export type VirtualUList = {
   /**
    * The view containing a consecutive part of the list
    * with known items.
@@ -13,18 +13,18 @@ export type VirtualList = {
   readonly frontier: readonly [low: number, high: number];
 };
 
-export function createVirtualList(init: number): VirtualList {
+export function createVirtualUList(init: number): VirtualUList {
   return {
     list: [],
     frontier: [init, init],
   };
 }
 
-export function expandVirtualList(
-  list: VirtualList,
+export function expandVirtualUList(
+  list: VirtualUList,
   append: readonly number[],
   appenderRange: readonly [low: number, high: number],
-): VirtualList {
+): VirtualUList {
   const newListBody = Array.from(new Set([...list.list, ...append])).sort(
     (a, b) => a - b,
   );
@@ -37,7 +37,7 @@ export function expandVirtualList(
         Math.max(list.frontier[1], appenderRange[1]),
       ]
     : list.frontier;
-  const newList: VirtualList = {
+  const newList: VirtualUList = {
     ...list,
     list: newListBody,
     frontier: newFrontier,
@@ -45,14 +45,12 @@ export function expandVirtualList(
   return newList;
 }
 
-// TODO: virtualListCutOff function
-
-export function cutOffVirtualList(
-  list: VirtualList,
+export function cutOffVirtualUList(
+  list: VirtualUList,
   cutOff: number,
   threshold: number,
   dir: "backward" | "forward",
-): VirtualList {
+): VirtualUList {
   if (list.list.length <= cutOff || list.list.length <= threshold) {
     return list;
   }
@@ -75,9 +73,9 @@ export function cutOffVirtualList(
   }
 }
 
-export type VirtualListDerivation = readonly VirtualListDerivationRow[];
-export type VirtualListDerivationRow = readonly VirtualListDerivationCell[];
-export type VirtualListDerivationCell = NumberedCell | LoadingCell | EmptyCell;
+export type VirtualUListDerivation = readonly VirtualUListDerivationRow[];
+export type VirtualUListDerivationRow = readonly VirtualUListDerivationCell[];
+export type VirtualUListDerivationCell = NumberedCell | LoadingCell | EmptyCell;
 
 export type NumberedCell = {
   type: "Numbered";
@@ -101,10 +99,10 @@ const LOADER_ROWS = 4;
 const RANGE_LOW = 0;
 const RANGE_HIGH = 0x110000;
 
-export function getVirtualListDerivation(
-  list: VirtualList,
+export function getVirtualUListDerivation(
+  list: VirtualUList,
   current: number,
-): VirtualListDerivation {
+): VirtualUListDerivation {
   const hasLowFrontier = list.frontier[0] > RANGE_LOW;
   const hasHighFrontier = list.frontier[1] < RANGE_HIGH;
 
@@ -134,7 +132,7 @@ export function getVirtualListDerivation(
     }
     partialGroupsFollow.push(...appender);
   }
-  const grouped: VirtualListDerivationRow[] = [
+  const grouped: VirtualUListDerivationRow[] = [
     ...regroupForward(partialGroupsPrecede),
     ...regroupBackward(partialGroupsFollow),
   ];
@@ -142,8 +140,8 @@ export function getVirtualListDerivation(
 }
 
 type PartiallyGroupedElement =
-  | VirtualListDerivationCell
-  | { type: "Row"; row: VirtualListDerivationRow };
+  | VirtualUListDerivationCell
+  | { type: "Row"; row: VirtualUListDerivationRow };
 
 function partialGroupRange(
   elem: PartiallyGroupedElement,
@@ -181,7 +179,7 @@ function groupPartially(
     }
     if (i - start >= ROW_ALIGN_THRESHOLD) {
       const aligned = Math.floor(startElement / ROW_ALIGN) * ROW_ALIGN;
-      const group: VirtualListDerivationCell[] = Array.from(
+      const group: VirtualUListDerivationCell[] = Array.from(
         { length: ROW_ALIGN },
         (_, i) => ({ type: "Empty", value: aligned + i }),
       );
@@ -205,10 +203,10 @@ function groupPartially(
 
 function regroupForward(
   partialGroups: readonly PartiallyGroupedElement[],
-): readonly VirtualListDerivationRow[] {
-  const grouped: VirtualListDerivationRow[] = [];
-  let currentRow: VirtualListDerivationCell[] | null = null as
-    | VirtualListDerivationCell[]
+): readonly VirtualUListDerivationRow[] {
+  const grouped: VirtualUListDerivationRow[] = [];
+  let currentRow: VirtualUListDerivationCell[] | null = null as
+    | VirtualUListDerivationCell[]
     | null;
   const flush = (last = false) => {
     if (currentRow != null) {
@@ -245,10 +243,10 @@ function regroupForward(
 
 function regroupBackward(
   partialGroups: readonly PartiallyGroupedElement[],
-): readonly VirtualListDerivationRow[] {
-  const groupedReversed: VirtualListDerivationRow[] = [];
-  let currentRowReversed: VirtualListDerivationCell[] | null = null as
-    | VirtualListDerivationCell[]
+): readonly VirtualUListDerivationRow[] {
+  const groupedReversed: VirtualUListDerivationRow[] = [];
+  let currentRowReversed: VirtualUListDerivationCell[] | null = null as
+    | VirtualUListDerivationCell[]
     | null;
   const flush = (last = false) => {
     if (currentRowReversed != null) {

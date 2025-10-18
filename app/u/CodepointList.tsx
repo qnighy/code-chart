@@ -9,8 +9,8 @@ import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
 import { LoaderCell } from "./LoaderCell";
 import { useIntersectionObserver } from "./useIntersectionObserver";
-import { getVirtualListDerivation } from "./virtual-list";
-import { useVirtualListDispatch } from "./useVirtualListDispatch";
+import { getVirtualUListDerivation } from "./virtual-list";
+import { useVirtualUListDispatch } from "./useVirtualListDispatch";
 import { codePointHex } from "../lib/unicode";
 
 const MIN_KEEPED_LINES = 128;
@@ -30,10 +30,10 @@ export function CodepointList() {
     forwardExpand,
     backwardCutOff,
     forwardCutOff,
-  } = useVirtualListDispatch(currentPos ?? 0);
+  } = useVirtualUListDispatch(currentPos ?? 0);
 
   const derivedList = useMemo(
-    () => getVirtualListDerivation(listData, currentPos ?? 0),
+    () => getVirtualUListDerivation(listData, currentPos ?? 0),
     [listData, currentPos],
   );
   const vlistRef = useRef<VirtuosoHandle>(null);
