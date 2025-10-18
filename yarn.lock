@@ -2091,9 +2091,9 @@ __metadata:
     prettier: "npm:^3.6.2"
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
+    react-virtuoso: "npm:^4.12.0"
     tailwindcss: "npm:^4.1.14"
     typescript: "npm:^5.9.3"
-    virtua: "npm:^0.45.2"
     vitest: "npm:^3.2.4"
   languageName: unknown
   linkType: soft
@@ -4560,6 +4560,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-virtuoso@npm:^4.12.0":
+  version: 4.14.1
+  resolution: "react-virtuoso@npm:4.14.1"
+  peerDependencies:
+    react: ">=16 || >=17 || >= 18 || >= 19"
+    react-dom: ">=16 || >=17 || >= 18 || >=19"
+  checksum: 10c0/1a9287e787b14f670475928f87e2d482da6d295b3de379a0a66d25e5bd570b63d0c130860abd3b897d663e0aab427278adbc3511637b0eea6f2e40c1e1e40923
+  languageName: node
+  linkType: hard
+
 "react@npm:^19.1.0":
   version: 19.2.0
   resolution: "react@npm:19.2.0"
@@ -5588,30 +5598,6 @@ __metadata:
   dependencies:
     punycode: "npm:^2.1.0"
   checksum: 10c0/4ef57b45aa820d7ac6496e9208559986c665e49447cb072744c13b66925a362d96dd5a46c4530a6b8e203e5db5fe849369444440cb22ecfc26c679359e5dfa3c
-  languageName: node
-  linkType: hard
-
-"virtua@npm:^0.45.2":
-  version: 0.45.2
-  resolution: "virtua@npm:0.45.2"
-  peerDependencies:
-    react: ">=16.14.0"
-    react-dom: ">=16.14.0"
-    solid-js: ">=1.0"
-    svelte: ">=5.0"
-    vue: ">=3.2"
-  peerDependenciesMeta:
-    react:
-      optional: true
-    react-dom:
-      optional: true
-    solid-js:
-      optional: true
-    svelte:
-      optional: true
-    vue:
-      optional: true
-  checksum: 10c0/0aba4fe10e0fa775071883a87c5363ea15fd382975b28f52e0588660bfac52d83623bdce575400648b622d7561063776e0b2d59395a0e22de4bd382277c5773b
   languageName: node
   linkType: hard
 

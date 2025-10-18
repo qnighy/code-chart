@@ -1,22 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { VList, type VListHandle } from "virtua";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { CharacterDisplay } from "./CharacterDisplay";
 import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
 import { LoaderCell } from "./LoaderCell";
 import { useIntersectionObserver } from "./useIntersectionObserver";
-import {
-  createVirtualList,
-  cutOffVirtualList,
-  expandVirtualList,
-  getVirtualListDerivation,
-  type VirtualList,
-  type VirtualListDerivationRow,
-} from "./virtual-list";
+import { getVirtualListDerivation } from "./virtual-list";
 import { useVirtualListDispatch } from "./useVirtualListDispatch";
 
 const MIN_KEEPED_LINES = 128;
@@ -24,7 +17,7 @@ const MIN_KEEPED_LINES = 128;
 export function CodepointList() {
   const {
     listData,
-    reverse,
+    reverse, // eslint-disable-line @typescript-eslint/no-unused-vars
     backwardExpand,
     forwardExpand,
     backwardCutOff,
@@ -34,7 +27,7 @@ export function CodepointList() {
     () => getVirtualListDerivation(listData),
     [listData],
   );
-  const vlistRef = useRef<VListHandle>(null);
+  const vlistRef = useRef<VirtuosoHandle>(null);
 
   const loadMoreBefore = useCallback(() => {
     const frontier = listData.frontier[0];
@@ -61,9 +54,9 @@ export function CodepointList() {
   const clearLines = (dir: "backward" | "forward") => {
     const size = 16 * Math.max(MIN_KEEPED_LINES, numLinesShown.current * 2);
     if (dir === "backward") {
-      backwardCutOff(size, size * 10);
+      backwardCutOff(size, size);
     } else {
-      forwardCutOff(size, size * 10);
+      forwardCutOff(size, size);
     }
   };
 
@@ -71,7 +64,7 @@ export function CodepointList() {
   const loaderBeforeObserver = useIntersectionObserver(
     (entries) => {
       if (entries.some((entry) => entry.isIntersecting)) {
-        vlistRef.current?.scrollBy(200);
+        vlistRef.current?.scrollBy({ top: 200 });
         clearLines("forward");
         loadMoreBefore();
       }
@@ -91,15 +84,12 @@ export function CodepointList() {
 
   // Used for cache removal as a hint to how many lines should be kept
   const numLinesShown = useRef(0);
-  const onScroll = useCallback(() => {
-    const vlist = vlistRef.current;
-    if (!vlist) {
-      return;
-    }
-    const start = vlist.findStartIndex();
-    const end = vlist.findEndIndex();
-    numLinesShown.current = end - start;
-  }, []);
+  const onRangeChanged = useCallback(
+    (range: { startIndex: number; endIndex: number }) => {
+      numLinesShown.current = range.endIndex - range.startIndex;
+    },
+    [],
+  );
 
   const initialLoadDone = useRef(false);
   useEffect(() => {
@@ -158,14 +148,13 @@ export function CodepointList() {
 
   return (
     <>
-      <VList<VirtualListDerivationRow>
+      <Virtuoso
         ref={vlistRef}
         data={derivedList}
-        reverse={reverse}
-        onScroll={onScroll}
         style={{ height: "calc(100vh - 200px)" }}
-      >
-        {(row, rowIndex) => {
+        rangeChanged={onRangeChanged}
+        increaseViewportBy={{ top: 400, bottom: 400 }}
+        itemContent={(rowIndex, row) => {
           const firstCode = row.find((elem) => typeof elem === "number");
           const key =
             firstCode != null ? `row-${firstCode}` : `row-empty-${rowIndex}`;
@@ -217,7 +206,7 @@ export function CodepointList() {
             </div>
           );
         }}
-      </VList>
+      />
 
       <CodepointModal
         codePoint={selectedCodepoint}
