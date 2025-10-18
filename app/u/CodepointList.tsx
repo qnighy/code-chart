@@ -8,6 +8,7 @@ import { CharacterDisplay } from "./CharacterDisplay";
 import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
 import { LoaderCell } from "./LoaderCell";
+import { useIntersectionObserver } from "./useIntersectionObserver";
 import {
   createVirtualList,
   expandVirtualList,
@@ -25,10 +26,6 @@ export function CodepointList() {
     [listData],
   );
   const vlistRef = useRef<VListHandle>(null);
-
-  // Create two shared IntersectionObservers for loader cells
-  const loaderBeforeObserver = useRef<IntersectionObserver | null>(null);
-  const loaderAfterObserver = useRef<IntersectionObserver | null>(null);
 
   const loadMoreBefore = useCallback(() => {
     const frontier = listData.frontier[0];
@@ -52,38 +49,24 @@ export function CodepointList() {
     setListData((prev) => expandVirtualList(prev, newCps, [frontier, loadTo]));
   }, [listData]);
 
-  useEffect(() => {
-    loaderBeforeObserver.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            loadMoreBefore();
-          }
-        });
-      },
-      {
-        threshold: 0.1, // Trigger when at least 10% of the element is visible
-      },
-    );
+  // Create two shared IntersectionObservers for loader cells using the hook
+  const loaderBeforeObserver = useIntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        loadMoreBefore();
+      }
+    },
+    { threshold: 0.1 },
+  );
 
-    loaderAfterObserver.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            loadMoreAfter();
-          }
-        });
-      },
-      {
-        threshold: 0.1, // Trigger when at least 10% of the element is visible
-      },
-    );
-
-    return () => {
-      loaderBeforeObserver.current?.disconnect();
-      loaderAfterObserver.current?.disconnect();
-    };
-  }, [loadMoreBefore, loadMoreAfter]);
+  const loaderAfterObserver = useIntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        loadMoreAfter();
+      }
+    },
+    { threshold: 0.1 },
+  );
 
   const onScroll = useCallback(() => {
     const vlist = vlistRef.current;
@@ -178,8 +161,8 @@ export function CodepointList() {
                       key={`${cp}-${cellIndex}`}
                       observer={
                         cp === "loading-before"
-                          ? (loaderBeforeObserver.current ?? undefined)
-                          : (loaderAfterObserver.current ?? undefined)
+                          ? (loaderBeforeObserver ?? undefined)
+                          : (loaderAfterObserver ?? undefined)
                       }
                     />
                   );
