@@ -47,10 +47,9 @@ export function expandVirtualUList(
 export function cutOffVirtualUList(
   list: VirtualUList,
   cutOff: number,
-  threshold: number,
   dir: "backward" | "forward",
 ): VirtualUList {
-  if (list.codePoints.length <= cutOff || list.codePoints.length <= threshold) {
+  if (list.codePoints.length <= cutOff) {
     return list;
   }
   if (dir === "backward") {

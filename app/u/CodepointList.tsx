@@ -46,7 +46,9 @@ export function CodepointList() {
     for (let cp = loadTo; cp < frontier; cp++) {
       newCps.push(cp);
     }
-    backwardExpand(newCps, [loadTo, frontier]);
+    setTimeout(() => {
+      backwardExpand(newCps, [loadTo, frontier]);
+    }, 0);
   }, [backwardExpand, listData]);
 
   const loadMoreAfter = useCallback(() => {
@@ -57,7 +59,9 @@ export function CodepointList() {
     for (let cp = frontier; cp < loadTo; cp++) {
       newCps.push(cp);
     }
-    forwardExpand(newCps, [frontier, loadTo]);
+    setTimeout(() => {
+      forwardExpand(newCps, [frontier, loadTo]);
+    }, 0);
   }, [forwardExpand, listData]);
 
   const clearLines = useCallback(
@@ -184,6 +188,7 @@ export function CodepointList() {
         startReached={requestLoadMoreBefore}
         endReached={requestLoadMoreAfter}
         increaseViewportBy={{ top: 400, bottom: 400 }}
+        overscan={{ main: 2000, reverse: 2000 }}
         itemContent={(_rowIndex, row) => {
           const firstCell = row.cells[0]!;
           const firstCode = row.range[0];

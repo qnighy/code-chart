@@ -42,13 +42,25 @@ export function useVirtualUListDispatch(
     [],
   );
 
-  const backwardCutOff = useCallback((cutOff: number, threshold: number) => {
-    dispatch({ type: "BACKWARD_CUT_OFF", cutOff, threshold });
-  }, []);
+  const backwardCutOff = useCallback(
+    (cutOff: number, threshold: number) => {
+      if (listData.codePoints.length <= threshold) {
+        return;
+      }
+      dispatch({ type: "BACKWARD_CUT_OFF", cutOff });
+    },
+    [listData.codePoints.length],
+  );
 
-  const forwardCutOff = useCallback((cutOff: number, threshold: number) => {
-    dispatch({ type: "FORWARD_CUT_OFF", cutOff, threshold });
-  }, []);
+  const forwardCutOff = useCallback(
+    (cutOff: number, threshold: number) => {
+      if (listData.codePoints.length <= threshold) {
+        return;
+      }
+      dispatch({ type: "FORWARD_CUT_OFF", cutOff });
+    },
+    [listData.codePoints.length],
+  );
 
   useDebugValue({
     listSize: listData.codePoints.length,
@@ -85,13 +97,11 @@ type ForwardExpandAction = {
 type BackwardCutOffAction = {
   type: "BACKWARD_CUT_OFF";
   cutOff: number;
-  threshold: number;
 };
 
 type ForwardCutOffAction = {
   type: "FORWARD_CUT_OFF";
   cutOff: number;
-  threshold: number;
 };
 
 function listDataReducer(
@@ -104,16 +114,9 @@ function listDataReducer(
       return expandVirtualUList(state, action.newCps, action.appenderRange);
     case "BACKWARD_CUT_OFF":
     case "FORWARD_CUT_OFF": {
-      if (
-        state.codePoints.length <= action.cutOff ||
-        state.codePoints.length <= action.threshold
-      ) {
-        return state;
-      }
       return cutOffVirtualUList(
         state,
         action.cutOff,
-        action.threshold,
         action.type === "BACKWARD_CUT_OFF" ? "backward" : "forward",
       );
     }
