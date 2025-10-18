@@ -118,7 +118,8 @@ export function CodepointList() {
         requestLoadMoreBefore();
       }
 
-      const middleIndex = Math.floor((range.startIndex + range.endIndex) / 2);
+      const middleIndex =
+        Math.floor((range.startIndex + range.endIndex) / 2) - layoutData.offset;
       if (middleIndex < 0 || middleIndex >= layoutData.rows.length) {
         return;
       }
