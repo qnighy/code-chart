@@ -26,8 +26,13 @@ export function CodepointList() {
   );
   const vlistRef = useRef<VListHandle>(null);
 
+  // Create two shared IntersectionObservers for loader cells
+  const loaderBeforeObserver = useRef<IntersectionObserver | null>(null);
+  const loaderAfterObserver = useRef<IntersectionObserver | null>(null);
+
   const loadMoreBefore = useCallback(() => {
     const frontier = listData.frontier[0];
+    if (frontier <= 0) return; // Already at the beginning
     const loadTo = Math.max(frontier - 256, 0);
     const newCps: number[] = [];
     for (let cp = loadTo; cp < frontier; cp++) {
@@ -38,6 +43,7 @@ export function CodepointList() {
 
   const loadMoreAfter = useCallback(() => {
     const frontier = listData.frontier[1];
+    if (frontier >= 0x110000) return; // Already at the end
     const loadTo = Math.min(frontier + 256, 0x110000);
     const newCps: number[] = [];
     for (let cp = frontier; cp < loadTo; cp++) {
@@ -45,6 +51,39 @@ export function CodepointList() {
     }
     setListData((prev) => expandVirtualList(prev, newCps, [frontier, loadTo]));
   }, [listData]);
+
+  useEffect(() => {
+    loaderBeforeObserver.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            loadMoreBefore();
+          }
+        });
+      },
+      {
+        threshold: 0.1, // Trigger when at least 10% of the element is visible
+      },
+    );
+
+    loaderAfterObserver.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            loadMoreAfter();
+          }
+        });
+      },
+      {
+        threshold: 0.1, // Trigger when at least 10% of the element is visible
+      },
+    );
+
+    return () => {
+      loaderBeforeObserver.current?.disconnect();
+      loaderAfterObserver.current?.disconnect();
+    };
+  }, [loadMoreBefore, loadMoreAfter]);
 
   const onScroll = useCallback(() => {
     const vlist = vlistRef.current;
@@ -134,7 +173,16 @@ export function CodepointList() {
                     />
                   );
                 } else if (cp === "loading-before" || cp === "loading-after") {
-                  return <LoaderCell key={`${cp}-${cellIndex}`} />;
+                  return (
+                    <LoaderCell
+                      key={`${cp}-${cellIndex}`}
+                      observer={
+                        cp === "loading-before"
+                          ? (loaderBeforeObserver.current ?? undefined)
+                          : (loaderAfterObserver.current ?? undefined)
+                      }
+                    />
+                  );
                 }
 
                 const cpHex = formatCPNumber(cp);
