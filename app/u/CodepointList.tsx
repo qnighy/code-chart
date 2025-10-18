@@ -11,16 +11,25 @@ import { LoaderCell } from "./LoaderCell";
 import { useIntersectionObserver } from "./useIntersectionObserver";
 import {
   createVirtualList,
+  cutOffVirtualList,
   expandVirtualList,
   getVirtualListDerivation,
   type VirtualList,
   type VirtualListDerivationRow,
 } from "./virtual-list";
+import { useVirtualListDispatch } from "./useVirtualListDispatch";
+
+const MIN_KEEPED_LINES = 128;
 
 export function CodepointList() {
-  const [listData, setListData] = useState<VirtualList>(() =>
-    createVirtualList(0),
-  );
+  const {
+    listData,
+    reverse,
+    backwardExpand,
+    forwardExpand,
+    backwardCutOff,
+    forwardCutOff,
+  } = useVirtualListDispatch();
   const derivedList = useMemo(
     () => getVirtualListDerivation(listData),
     [listData],
@@ -35,8 +44,8 @@ export function CodepointList() {
     for (let cp = loadTo; cp < frontier; cp++) {
       newCps.push(cp);
     }
-    setListData((prev) => expandVirtualList(prev, newCps, [loadTo, frontier]));
-  }, [listData]);
+    backwardExpand(newCps, [loadTo, frontier]);
+  }, [backwardExpand, listData]);
 
   const loadMoreAfter = useCallback(() => {
     const frontier = listData.frontier[1];
@@ -46,13 +55,24 @@ export function CodepointList() {
     for (let cp = frontier; cp < loadTo; cp++) {
       newCps.push(cp);
     }
-    setListData((prev) => expandVirtualList(prev, newCps, [frontier, loadTo]));
-  }, [listData]);
+    forwardExpand(newCps, [frontier, loadTo]);
+  }, [forwardExpand, listData]);
+
+  const clearLines = (dir: "backward" | "forward") => {
+    const size = 16 * Math.max(MIN_KEEPED_LINES, numLinesShown.current * 2);
+    if (dir === "backward") {
+      backwardCutOff(size, size * 10);
+    } else {
+      forwardCutOff(size, size * 10);
+    }
+  };
 
   // Create two shared IntersectionObservers for loader cells using the hook
   const loaderBeforeObserver = useIntersectionObserver(
     (entries) => {
       if (entries.some((entry) => entry.isIntersecting)) {
+        vlistRef.current?.scrollBy(200);
+        clearLines("forward");
         loadMoreBefore();
       }
     },
@@ -62,12 +82,15 @@ export function CodepointList() {
   const loaderAfterObserver = useIntersectionObserver(
     (entries) => {
       if (entries.some((entry) => entry.isIntersecting)) {
+        clearLines("backward");
         loadMoreAfter();
       }
     },
     { rootMargin: "50%" },
   );
 
+  // Used for cache removal as a hint to how many lines should be kept
+  const numLinesShown = useRef(0);
   const onScroll = useCallback(() => {
     const vlist = vlistRef.current;
     if (!vlist) {
@@ -75,7 +98,7 @@ export function CodepointList() {
     }
     const start = vlist.findStartIndex();
     const end = vlist.findEndIndex();
-    // TODO: load-more logic
+    numLinesShown.current = end - start;
   }, []);
 
   const initialLoadDone = useRef(false);
@@ -138,6 +161,7 @@ export function CodepointList() {
       <VList<VirtualListDerivationRow>
         ref={vlistRef}
         data={derivedList}
+        reverse={reverse}
         onScroll={onScroll}
         style={{ height: "calc(100vh - 200px)" }}
       >

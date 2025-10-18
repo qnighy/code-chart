@@ -52,6 +52,34 @@ export function expandVirtualList(
 
 // TODO: virtualListCutOff function
 
+export function cutOffVirtualList(
+  list: VirtualList,
+  cutOff: number,
+  threshold: number,
+  dir: "backward" | "forward",
+): VirtualList {
+  if (list.list.length <= cutOff || list.list.length <= threshold) {
+    return list;
+  }
+  if (dir === "backward") {
+    const index = list.list.length - cutOff;
+    const newFrontier = Math.max(list.frontier[0], list.list[index - 1]! + 1);
+    return {
+      ...list,
+      list: list.list.slice(index),
+      frontier: [newFrontier, list.frontier[1]],
+    };
+  } else {
+    const index = cutOff;
+    const newFrontier = Math.min(list.frontier[1], list.list[index]!);
+    return {
+      ...list,
+      list: list.list.slice(0, index),
+      frontier: [list.frontier[0], newFrontier],
+    };
+  }
+}
+
 export function moveVirtualListTo(
   list: VirtualList,
   newCurrent: number,
