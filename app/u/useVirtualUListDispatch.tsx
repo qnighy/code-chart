@@ -4,7 +4,7 @@ import {
   cutOffVirtualUList,
   expandVirtualUList,
   type VirtualUList,
-} from "./virtual-list";
+} from "./virtual-ulist";
 
 export type UseVirtualUListDispatchResult = {
   listData: VirtualUList;

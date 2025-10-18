@@ -9,8 +9,8 @@ import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
 import { LoaderCell } from "./LoaderCell";
 import { useIntersectionObserver } from "./useIntersectionObserver";
-import { getVirtualUListDerivation } from "./virtual-list";
-import { useVirtualUListDispatch } from "./useVirtualListDispatch";
+import { getVirtualUListDerivation } from "./virtual-ulist";
+import { useVirtualUListDispatch } from "./useVirtualUListDispatch";
 import { codePointHex } from "../lib/unicode";
 
 const MIN_KEEPED_LINES = 128;
