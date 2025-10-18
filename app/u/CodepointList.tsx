@@ -47,7 +47,7 @@ export function CodepointList() {
     forwardCutOff,
   } = useVirtualUListDispatch(currentPos ?? 0);
 
-  const derivedList = useMemo(
+  const layoutData = useMemo(
     () => layoutVirtualUList(listData, currentPos ?? 0),
     [listData, currentPos],
   );
@@ -115,13 +115,13 @@ export function CodepointList() {
       numLinesShown.current = range.endIndex - range.startIndex;
 
       const middleIndex = Math.floor((range.startIndex + range.endIndex) / 2);
-      if (middleIndex < 0 || middleIndex >= derivedList.length) {
+      if (middleIndex < 0 || middleIndex >= layoutData.rows.length) {
         return;
       }
-      const middleRow = derivedList[middleIndex];
+      const middleRow = layoutData.rows[middleIndex];
       updateUrlWithPosition(middleRow.range[0]);
     },
-    [derivedList],
+    [layoutData],
   );
 
   const initialLoadDone = useRef(false);
@@ -177,14 +177,14 @@ export function CodepointList() {
     updateUrlWithCodepoint(cpHex);
   };
 
-  const showTopShimmer = listData.frontier[0] > 0;
-  const showBottomShimmer = listData.frontier[1] < 0x110000;
+  const showTopShimmer = layoutData.hasLowFrontier;
+  const showBottomShimmer = layoutData.hasHighFrontier;
 
   return (
     <div ref={scrollRootRef}>
       <Virtuoso
         ref={vlistRef}
-        data={derivedList}
+        data={layoutData.rows}
         style={{ height: "calc(100vh - 200px)" }}
         rangeChanged={onRangeChanged}
         startReached={requestLoadMoreBefore}

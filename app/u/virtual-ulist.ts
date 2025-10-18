@@ -74,7 +74,11 @@ export function cutOffVirtualUList(
   }
 }
 
-export type VLayout = readonly VLayoutRow[];
+export type VLayout = {
+  rows: readonly VLayoutRow[];
+  hasLowFrontier: boolean;
+  hasHighFrontier: boolean;
+};
 export type VLayoutRow = {
   readonly type: "Row";
   readonly cells: readonly VLayoutCell[];
@@ -151,7 +155,7 @@ export function layoutVirtualUList(
     ...regroupForward(partialGroupsPrecede),
     ...regroupBackward(partialGroupsFollow),
   ];
-  return grouped;
+  return { rows: grouped, hasLowFrontier, hasHighFrontier };
 }
 
 type PartiallyGroupedElement = VLayoutCell | VLayoutRow;
