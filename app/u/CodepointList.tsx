@@ -21,12 +21,18 @@ import {
 import { layoutVirtualUList } from "./virtual-ulist";
 import { useVirtualUListDispatch } from "./useVirtualUListDispatch";
 import { codePointHex } from "../lib/unicode";
-import type { GeneralCategoryCore } from "../lib/ucd/character-data";
 import { useAsyncLoad } from "./useAsyncLoad";
 import { chunkIndexOf, chunkRangeOf } from "../lib/ucd/chunk";
 import { chunks } from "../shared";
 import { deriveCharacterData } from "../lib/ucd/derived-data";
-import { filterFromSearchParams, filterToSearch } from "./filter";
+import {
+  evaluateFilter,
+  filterFromSearchParams,
+  filterToSearch,
+  isTrivialFilter,
+  type Filter,
+} from "./filter";
+import { useJSONMemoize } from "./useJSONMemoize";
 
 const MIN_KEEPED_LINES = 128;
 const EXTRA_KEEPED_LINES = 10;
@@ -34,20 +40,18 @@ const EXTRA_KEEPED_LINES = 10;
 export function CodepointList(): ReactElement | null {
   const searchParams = useSearchParams();
 
-  const filter = filterFromSearchParams(searchParams);
-  const key = filterToSearch(filter);
+  const filter = useJSONMemoize(filterFromSearchParams(searchParams));
+  const key = useMemo(() => filterToSearch(filter), [filter]);
 
-  return (
-    <CodepointListBody key={key} generalCategory={filter.generalCategory[0]} />
-  );
+  return <CodepointListBody key={key} filter={filter} />;
 }
 
 type CodepointListBodyProps = {
-  generalCategory: GeneralCategoryCore | undefined;
+  filter: Filter;
 };
 
 function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
-  const { generalCategory } = props;
+  const { filter } = props;
   const searchParams = useSearchParams();
 
   const currentPositionParam = searchParams.get("current");
@@ -111,16 +115,16 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
       }
       const chunkIndex = chunkIndexOf(frontier - 1);
       const [chunkStart] = chunkRangeOf(chunkIndex);
-      const chunk =
-        generalCategory != null ? await chunks.getChunk(chunkIndex) : undefined;
+      const trivial = isTrivialFilter(filter);
+      const chunk = trivial ? undefined : await chunks.getChunk(chunkIndex);
       const indexedChunk = Object.fromEntries(
         chunk?.characters.map((c) => [c.codePoint, c]) ?? [],
       );
       const newCps: number[] = [];
       for (let cp = chunkStart; cp < frontier; cp++) {
-        if (generalCategory != null) {
+        if (!trivial) {
           const charData = deriveCharacterData(cp, indexedChunk[cp]);
-          if (charData.generalCategory !== generalCategory) {
+          if (!evaluateFilter(filter, charData)) {
             continue;
           }
         }
@@ -151,16 +155,16 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
       }
       const chunkIndex = chunkIndexOf(frontier);
       const [, chunkEnd] = chunkRangeOf(chunkIndex);
-      const chunk =
-        generalCategory != null ? await chunks.getChunk(chunkIndex) : undefined;
+      const trivial = isTrivialFilter(filter);
+      const chunk = !trivial ? await chunks.getChunk(chunkIndex) : undefined;
       const indexedChunk = Object.fromEntries(
         chunk?.characters.map((c) => [c.codePoint, c]) ?? [],
       );
       const newCps: number[] = [];
       for (let cp = frontier; cp < chunkEnd; cp++) {
-        if (generalCategory != null) {
+        if (!trivial) {
           const charData = deriveCharacterData(cp, indexedChunk[cp]);
-          if (charData.generalCategory !== generalCategory) {
+          if (!evaluateFilter(filter, charData)) {
             continue;
           }
         }

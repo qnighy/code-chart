@@ -1,5 +1,6 @@
 import type { ReadonlyURLSearchParams } from "next/navigation";
 import type { GeneralCategoryCore } from "../lib/ucd/character-data";
+import type { DerivedData } from "../lib/ucd/derived-data";
 
 export type Filter = FilterTerm;
 
@@ -130,4 +131,23 @@ export function filterFromSearchParams(
   return {
     generalCategory: normalizeGeneralCategories(generalCategory),
   };
+}
+
+export function isTrivialFilter(filter: Filter): boolean {
+  if (
+    filter.generalCategory.length > 0 &&
+    filter.generalCategory.length < GENERAL_CATEGORIES.length
+  ) {
+    return false;
+  }
+  return true;
+}
+
+export function evaluateFilter(filter: Filter, item: DerivedData): boolean {
+  if (filter.generalCategory.length > 0) {
+    if (!filter.generalCategory.includes(item.generalCategory)) {
+      return false;
+    }
+  }
+  return true;
 }
