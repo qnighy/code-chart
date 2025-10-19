@@ -14,7 +14,11 @@ import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { CharacterDisplay } from "./CharacterDisplay";
 import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
-import { LoaderCell } from "./LoaderCell";
+import {
+  CodepointCell,
+  EmptyPaddingCell,
+  EmptyShimmerCell,
+} from "./CodepointCell";
 import { layoutVirtualUList } from "./virtual-ulist";
 import { useVirtualUListDispatch } from "./useVirtualUListDispatch";
 import { codePointHex } from "../lib/unicode";
@@ -344,39 +348,24 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
               {row.cells.map((cell) => {
                 if (cell.type === "Empty" && cell.cellKind === "padding") {
                   return (
-                    <div
+                    <EmptyPaddingCell
                       key={`e-${codePointHex(cell.codePoint)}-${cell.offset}`}
-                      className="aspect-square w-16"
                     />
                   );
                 } else if (cell.type === "Empty") {
                   return (
-                    <LoaderCell
+                    <EmptyShimmerCell
                       key={`ld-${codePointHex(cell.codePoint)}-${cell.offset}`}
                     />
                   );
                 }
 
-                const cpHex = formatCPNumber(cell.codePoint);
-
                 return (
-                  <Link
+                  <CodepointCell
                     key={codePointHex(cell.codePoint)}
-                    href={`/u/${cpHex}`}
-                    onClick={(e) => handleLinkClick(e, cell.codePoint)}
-                    className="aspect-square border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center relative group w-16"
-                  >
-                    <div className="text-center">
-                      <CharacterDisplay
-                        codePoint={cell.codePoint}
-                        className="text-2xl sm:text-3xl md:text-4xl"
-                        replacementClassName="text-gray-400 dark:text-gray-500"
-                      />
-                      <div className="text-[0.5rem] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 font-mono">
-                        {cpHex}
-                      </div>
-                    </div>
-                  </Link>
+                    codePoint={cell.codePoint}
+                    onLinkClick={handleLinkClick}
+                  />
                 );
               })}
             </div>
