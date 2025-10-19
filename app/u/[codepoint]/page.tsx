@@ -217,6 +217,16 @@ export default async function CodepointPage({
               </dd>
             </dl>
           </div>
+
+          {/* Link to Character List */}
+          <div className="pt-4">
+            <Link
+              href={`/u?current=${normalized}&cp=${normalized}`}
+              className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+            >
+              ← Back to character list
+            </Link>
+          </div>
         </div>
       </main>
     </div>
