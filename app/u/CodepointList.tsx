@@ -193,10 +193,9 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
       );
       const newCps: number[] = [];
       for (let cp = frontier; cp < chunkEnd; cp++) {
-        const charData = indexedChunk[cp];
-        if (charData) {
-          const derivedData = deriveCharacterData(cp, charData);
-          if (derivedData.generalCategory !== generalCategory) {
+        if (generalCategory != null) {
+          const charData = deriveCharacterData(cp, indexedChunk[cp]);
+          if (charData.generalCategory !== generalCategory) {
             continue;
           }
         }
