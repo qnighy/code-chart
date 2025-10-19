@@ -233,6 +233,7 @@ export type VLayoutRow = {
   readonly type: "Row";
   readonly cells: readonly VLayoutCell[];
   readonly range: readonly [number, number];
+  readonly alignment: "start" | "end";
 };
 export type VLayoutCell = CodePointCell | EmptyCell;
 
@@ -263,7 +264,7 @@ export function layoutVirtualUList(
     currentRowPos = list.rows.length;
   }
   return {
-    rows: list.rows.map((row) => {
+    rows: list.rows.map((row, rowIndex): VLayoutRow => {
       let cells: VLayoutCell[];
       if (row.type === "Discrete") {
         cells = row.values.map(
@@ -290,10 +291,21 @@ export function layoutVirtualUList(
           };
         }
       }
+      // Align to the right if this is the first row of a multi-row list
+      // and the row is a discrete row, and there is a low frontier.
+      // This means that the row may be expanded backward later.
+      const alignment =
+        rowIndex === 0 &&
+        row.type === "Discrete" &&
+        list.rows.length > 1 &&
+        hasLowFrontier
+          ? "end"
+          : "start";
       return {
         type: "Row",
         cells,
         range: [row.values[0]!, row.values.at(-1)! + 1],
+        alignment,
       };
     }),
     currentRowIndex: currentRowPos,

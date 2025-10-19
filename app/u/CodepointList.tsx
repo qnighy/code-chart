@@ -9,9 +9,7 @@ import {
   type ReactElement,
 } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-import { CharacterDisplay } from "./CharacterDisplay";
 import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
 import {
@@ -24,7 +22,7 @@ import { useVirtualUListDispatch } from "./useVirtualUListDispatch";
 import { codePointHex } from "../lib/unicode";
 import type { GeneralCategoryCore } from "../lib/ucd/character-data";
 import { useAsyncLoad } from "./useAsyncLoad";
-import { CHUNK_SIZE, chunkIndexOf, chunkRangeOf } from "../lib/ucd/chunk";
+import { chunkIndexOf, chunkRangeOf } from "../lib/ucd/chunk";
 import { chunks } from "../shared";
 import { deriveCharacterData } from "../lib/ucd/derived-data";
 
@@ -343,8 +341,13 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
         itemContent={(_rowIndex, row) => {
           const firstCode = row.range[0];
           const key = `row-${codePointHex(firstCode)}`;
+          const alignmentClass =
+            row.alignment === "end" ? "justify-end" : "justify-start";
           return (
-            <div key={key} className="flex flex-wrap gap-2 mb-2">
+            <div
+              key={key}
+              className={`flex flex-wrap gap-2 mb-2 ${alignmentClass}`}
+            >
               {row.cells.map((cell) => {
                 if (cell.type === "Empty" && cell.cellKind === "padding") {
                   return (
