@@ -386,17 +386,19 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
 }
 
 function ShimmerHeader() {
+  // Width calculation: 16 cells × 4rem (w-16) + 15 gaps × 0.5rem (gap-2) = 71.5rem
   return (
-    <div className="w-full mb-2">
-      <div className="h-[4.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
+    <div className="mb-2">
+      <div className="h-[4.5rem] max-w-[71.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
     </div>
   );
 }
 
 function ShimmerFooter() {
+  // Width calculation: 16 cells × 4rem (w-16) + 15 gaps × 0.5rem (gap-2) = 71.5rem
   return (
-    <div className="w-full mt-2">
-      <div className="h-[4.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
+    <div className="mt-2">
+      <div className="h-[4.5rem] max-w-[71.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
     </div>
   );
 }
