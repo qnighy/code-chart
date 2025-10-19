@@ -263,16 +263,39 @@ export function layoutVirtualUList(
     currentRowPos = list.rows.length;
   }
   return {
-    rows: list.rows.map((row) => ({
-      type: "Row",
-      cells: row.values.map(
-        (cp): VLayoutCell => ({
-          type: "CodePoint",
-          codePoint: cp,
-        }),
-      ),
-      range: [row.values[0]!, row.values.at(-1)! + 1],
-    })),
+    rows: list.rows.map((row) => {
+      let cells: VLayoutCell[];
+      if (row.type === "Discrete") {
+        cells = row.values.map(
+          (cp): VLayoutCell => ({
+            type: "CodePoint",
+            codePoint: cp,
+          }),
+        );
+      } else {
+        const floor = Math.floor(row.values[0]! / ROW_ALIGN) * ROW_ALIGN;
+        cells = Array.from({ length: ROW_ALIGN }, (_, i): VLayoutCell => {
+          const cp = floor + i;
+          return {
+            type: "Empty",
+            codePoint: cp,
+            offset: 0,
+            cellKind: "padding",
+          };
+        });
+        for (const cp of row.values) {
+          cells[cp - floor] = {
+            type: "CodePoint",
+            codePoint: cp,
+          };
+        }
+      }
+      return {
+        type: "Row",
+        cells,
+        range: [row.values[0]!, row.values.at(-1)! + 1],
+      };
+    }),
     currentRowIndex: currentRowPos,
     offset: list.offset,
     hasLowFrontier,
