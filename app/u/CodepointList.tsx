@@ -122,7 +122,7 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
       // Clear the target when reached
       setLoadMoreBeforeTarget(undefined);
     }
-  }, [loadMoreBeforeTarget, listData.offset]);
+  }, [loadMoreBeforeTarget, listData.offset, layoutData.hasLowFrontier]);
 
   useEffect(() => {
     if (
@@ -133,7 +133,7 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
       // Clear the target when reached
       setLoadMoreAfterTarget(undefined);
     }
-  }, [loadMoreAfterTarget, listData]);
+  }, [loadMoreAfterTarget, listData, layoutData.hasHighFrontier]);
 
   useAsyncLoad({
     requestLoad:
@@ -227,12 +227,12 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
   const requestLoadMoreBefore = useCallback(() => {
     clearLines("forward");
     setLoadMoreBeforeTarget(listData.offset - 1);
-  }, [clearLines]);
+  }, [clearLines, listData.offset]);
 
   const requestLoadMoreAfter = useCallback(() => {
     clearLines("backward");
     setLoadMoreAfterTarget(listData.offset + listData.rows.length + 1);
-  }, [clearLines]);
+  }, [clearLines, listData.offset, listData.rows.length]);
 
   // Used for cache removal as a hint to how many lines should be kept
   const numLinesShown = useRef(0);
@@ -249,7 +249,7 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
       setInitializePosition(false);
       updateUrlWithPosition(middleRow.range[0]);
     },
-    [layoutData, requestLoadMoreBefore],
+    [layoutData],
   );
 
   const initialLoadDone = useRef(false);
