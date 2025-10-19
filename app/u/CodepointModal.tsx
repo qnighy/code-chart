@@ -7,6 +7,7 @@ import { formatCPNumber } from "./cp-number";
 import { chunks } from "../shared";
 import { chunkIndexOf } from "../lib/ucd/chunk";
 import { deriveCharacterData } from "../lib/ucd/derived-data";
+import { GENERAL_CATEGORY_NAMES } from "../lib/ucd/character-data";
 
 interface CodepointModalProps {
   codePoint: number | null;
@@ -112,7 +113,7 @@ function CodepointModalContent({
               General Category:
             </dt>
             <dd className="font-mono text-gray-900 dark:text-gray-100">
-              {charData.generalCategory}
+              {GENERAL_CATEGORY_NAMES[charData.generalCategory]}
             </dd>
 
             <dt className="font-medium text-gray-700 dark:text-gray-300">

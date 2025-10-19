@@ -10,6 +10,7 @@ import { sanitizeForHtmlSerialization } from "../ArbitraryText.helper";
 import { chunks } from "../../shared";
 import { chunkIndexOf } from "../../lib/ucd/chunk";
 import { deriveCharacterData } from "../../lib/ucd/derived-data";
+import { GENERAL_CATEGORY_NAMES } from "../../lib/ucd/character-data";
 
 interface PageProps {
   params: Promise<{
@@ -40,7 +41,7 @@ export async function generateMetadata({
         const sanitized = sanitizeForHtmlSerialization(character);
         const safeChar = sanitized ? ` - ${sanitized}` : "";
         const title = `U+${normalized} ${charData.name}${safeChar}`;
-        const description = `Unicode character U+${normalized}: ${charData.name}${safeChar}. General Category: ${charData.generalCategory}`;
+        const description = `Data page for Unicode character U+${normalized}: ${charData.name}${safeChar}.`;
 
         return {
           title,
@@ -183,7 +184,9 @@ export default async function CodepointPage({
 
               {/* General Category */}
               <dt className="font-medium">General Category:</dt>
-              <dd className="font-mono">{charData.generalCategory}</dd>
+              <dd className="font-mono">
+                {GENERAL_CATEGORY_NAMES[charData.generalCategory]}
+              </dd>
 
               <dt className="font-medium">Decimal:</dt>
               <dd className="font-mono">{cp}</dd>

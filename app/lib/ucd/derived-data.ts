@@ -1,8 +1,51 @@
 import { codePointHex, codePointHexName } from "../unicode";
-import type {
-  CharacterData,
-  GeneralCategoryCore,
-  NameDerivation,
+import {
+  CLOSE_PUNCTUATION,
+  CONNECTOR_PUNCTUATION,
+  CONTROL,
+  CURRENCY_SYMBOL,
+  DASH_PUNCTUATION,
+  DECIMAL_NUMBER,
+  ENCLOSING_MARK,
+  FINAL_PUNCTUATION,
+  FORMAT,
+  INITIAL_PUNCTUATION,
+  LETTER_NUMBER,
+  LINE_SEPARATOR,
+  LOWERCASE_LETTER,
+  MATH_SYMBOL,
+  MODIFIER_LETTER,
+  MODIFIER_SYMBOL,
+  NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH,
+  NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  NAME_DERIVATION_CONTROL,
+  NAME_DERIVATION_EGYPTIAN_HIEROGLYPH,
+  NAME_DERIVATION_HANGUL_SYLLABLE,
+  NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER,
+  NAME_DERIVATION_NONCHARACTER,
+  NAME_DERIVATION_NUSHU_CHARACTER,
+  NAME_DERIVATION_PRIVATE_USE,
+  NAME_DERIVATION_RESERVED,
+  NAME_DERIVATION_SURROGATE,
+  NAME_DERIVATION_TANGUT_IDEOGRAPH,
+  NAME_DERIVATION_UNSPECIFIED,
+  NONSPACING_MARK,
+  OPEN_PUNCTUATION,
+  OTHER_LETTER,
+  OTHER_NUMBER,
+  OTHER_PUNCTUATION,
+  OTHER_SYMBOL,
+  PARAGRAPH_SEPARATOR,
+  PRIVATE_USE,
+  SPACE_SEPARATOR,
+  SPACING_MARK,
+  SURROGATE,
+  TITLECASE_LETTER,
+  UNASSIGNED,
+  UPPERCASE_LETTER,
+  type CharacterData,
+  type GeneralCategoryCore,
+  type NameDerivation,
 } from "./character-data";
 
 export type DerivedData = {
@@ -33,21 +76,21 @@ export function deriveCharacterData(
   if (!baseData) {
     return {
       codePoint,
-      name: deriveName(codePoint, "", "NAME_DERIVATION_RESERVED"),
-      generalCategory: "UNASSIGNED",
+      // TODO: support NONCHARACTER derivation
+      name: deriveName(codePoint, "", NAME_DERIVATION_RESERVED),
+      generalCategory: UNASSIGNED,
     };
   }
   const {
     name: baseName,
     nameDerivation,
-    generalCategory = "UNASSIGNED",
+    generalCategory = UNASSIGNED,
   } = baseData;
   const name = deriveName(codePoint, baseName, nameDerivation);
   const derivedGeneralCategory: GeneralCategoryCore =
-    typeof generalCategory === "number" ||
-    generalCategory === "GENERAL_CATEGORY_UNSPECIFIED"
-      ? "UNASSIGNED"
-      : generalCategory;
+    GENERAL_CATEGORY_CORES.has(generalCategory as GeneralCategoryCore)
+      ? (generalCategory as GeneralCategoryCore)
+      : UNASSIGNED;
   return {
     codePoint,
     name,
@@ -55,25 +98,53 @@ export function deriveCharacterData(
   };
 }
 
-const nameTemplates: Record<
-  Exclude<
-    NameDerivation,
-    "NAME_DERIVATION_UNSPECIFIED" | "NAME_DERIVATION_HANGUL_SYLLABLE"
-  >,
-  string
-> = {
-  NAME_DERIVATION_CONTROL: "<control-$>",
-  NAME_DERIVATION_RESERVED: "<reserved-$>",
-  NAME_DERIVATION_NONCHARACTER: "<noncharacter-$>",
-  NAME_DERIVATION_PRIVATE_USE: "<private-use-$>",
-  NAME_DERIVATION_SURROGATE: "<surrogate-$>",
-  NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH: "CJK UNIFIED IDEOGRAPH-$",
-  NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH: "CJK COMPATIBILITY IDEOGRAPH-$",
-  NAME_DERIVATION_EGYPTIAN_HIEROGLYPH: "EGYPTIAN HIEROGLYPH-$",
-  NAME_DERIVATION_TANGUT_IDEOGRAPH: "TANGUT IDEOGRAPH-$",
-  NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER:
+const GENERAL_CATEGORY_CORES: Set<GeneralCategoryCore> = new Set([
+  UPPERCASE_LETTER,
+  LOWERCASE_LETTER,
+  TITLECASE_LETTER,
+  MODIFIER_LETTER,
+  OTHER_LETTER,
+  NONSPACING_MARK,
+  SPACING_MARK,
+  ENCLOSING_MARK,
+  DECIMAL_NUMBER,
+  LETTER_NUMBER,
+  OTHER_NUMBER,
+  CONNECTOR_PUNCTUATION,
+  DASH_PUNCTUATION,
+  OPEN_PUNCTUATION,
+  CLOSE_PUNCTUATION,
+  INITIAL_PUNCTUATION,
+  FINAL_PUNCTUATION,
+  OTHER_PUNCTUATION,
+  MATH_SYMBOL,
+  CURRENCY_SYMBOL,
+  MODIFIER_SYMBOL,
+  OTHER_SYMBOL,
+  SPACE_SEPARATOR,
+  LINE_SEPARATOR,
+  PARAGRAPH_SEPARATOR,
+  CONTROL,
+  FORMAT,
+  SURROGATE,
+  PRIVATE_USE,
+  UNASSIGNED,
+]);
+
+const nameTemplates: Record<NameDerivation, string> = {
+  [NAME_DERIVATION_CONTROL]: "<control-$>",
+  [NAME_DERIVATION_RESERVED]: "<reserved-$>",
+  [NAME_DERIVATION_NONCHARACTER]: "<noncharacter-$>",
+  [NAME_DERIVATION_PRIVATE_USE]: "<private-use-$>",
+  [NAME_DERIVATION_SURROGATE]: "<surrogate-$>",
+  [NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH]: "CJK UNIFIED IDEOGRAPH-$",
+  [NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH]:
+    "CJK COMPATIBILITY IDEOGRAPH-$",
+  [NAME_DERIVATION_EGYPTIAN_HIEROGLYPH]: "EGYPTIAN HIEROGLYPH-$",
+  [NAME_DERIVATION_TANGUT_IDEOGRAPH]: "TANGUT IDEOGRAPH-$",
+  [NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER]:
     "KHITAN SMALL SCRIPT CHARACTER-$",
-  NAME_DERIVATION_NUSHU_CHARACTER: "NUSHU CHARACTER-$",
+  [NAME_DERIVATION_NUSHU_CHARACTER]: "NUSHU CHARACTER-$",
 };
 
 export function deriveName(
@@ -81,9 +152,9 @@ export function deriveName(
   name: string,
   nameDerivation: NameDerivation,
 ): string {
-  if (nameDerivation === "NAME_DERIVATION_UNSPECIFIED") {
+  if (nameDerivation === NAME_DERIVATION_UNSPECIFIED) {
     return name;
-  } else if (nameDerivation === "NAME_DERIVATION_HANGUL_SYLLABLE") {
+  } else if (nameDerivation === NAME_DERIVATION_HANGUL_SYLLABLE) {
     return deriveHangulSyllableName(codePoint);
   } else {
     const template = nameTemplates[nameDerivation];
