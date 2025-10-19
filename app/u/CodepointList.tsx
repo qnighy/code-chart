@@ -26,6 +26,7 @@ import { useAsyncLoad } from "./useAsyncLoad";
 import { chunkIndexOf, chunkRangeOf } from "../lib/ucd/chunk";
 import { chunks } from "../shared";
 import { deriveCharacterData } from "../lib/ucd/derived-data";
+import { filterFromSearchParams, filterToSearch } from "./filter";
 
 const MIN_KEEPED_LINES = 128;
 const EXTRA_KEEPED_LINES = 10;
@@ -33,56 +34,16 @@ const EXTRA_KEEPED_LINES = 10;
 export function CodepointList(): ReactElement | null {
   const searchParams = useSearchParams();
 
-  const generalCategoryParam = searchParams.get("gc");
-  const generalCategory =
-    generalCategoryParam != null &&
-    Object.hasOwn(GeneralCategoryShorthandMap, generalCategoryParam)
-      ? GeneralCategoryShorthandMap[generalCategoryParam]!
-      : undefined;
+  const filter = filterFromSearchParams(searchParams);
+  const key = filterToSearch(filter);
 
   return (
-    <CodepointListBody
-      key={generalCategory ?? "all"}
-      generalCategory={generalCategory}
-    />
+    <CodepointListBody key={key} generalCategory={filter.generalCategory[0]} />
   );
 }
 
 type CodepointListBodyProps = {
   generalCategory: GeneralCategoryCore | undefined;
-};
-
-const GeneralCategoryShorthandMap: Record<string, GeneralCategoryCore> = {
-  Lu: "UPPERCASE_LETTER",
-  Ll: "LOWERCASE_LETTER",
-  Lt: "TITLECASE_LETTER",
-  Lm: "MODIFIER_LETTER",
-  Lo: "OTHER_LETTER",
-  Mn: "NONSPACING_MARK",
-  Mc: "SPACING_MARK",
-  Me: "ENCLOSING_MARK",
-  Nd: "DECIMAL_NUMBER",
-  Nl: "LETTER_NUMBER",
-  No: "OTHER_NUMBER",
-  Pc: "CONNECTOR_PUNCTUATION",
-  Pd: "DASH_PUNCTUATION",
-  Ps: "OPEN_PUNCTUATION",
-  Pe: "CLOSE_PUNCTUATION",
-  Pi: "INITIAL_PUNCTUATION",
-  Pf: "FINAL_PUNCTUATION",
-  Po: "OTHER_PUNCTUATION",
-  Sm: "MATH_SYMBOL",
-  Sc: "CURRENCY_SYMBOL",
-  Sk: "MODIFIER_SYMBOL",
-  So: "OTHER_SYMBOL",
-  Zs: "SPACE_SEPARATOR",
-  Zl: "LINE_SEPARATOR",
-  Zp: "PARAGRAPH_SEPARATOR",
-  Cc: "CONTROL",
-  Cf: "FORMAT",
-  Cs: "SURROGATE",
-  Co: "PRIVATE_USE",
-  Cn: "UNASSIGNED",
 };
 
 function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
