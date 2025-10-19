@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
@@ -11,27 +18,72 @@ import { LoaderCell } from "./LoaderCell";
 import { layoutVirtualUList } from "./virtual-ulist";
 import { useVirtualUListDispatch } from "./useVirtualUListDispatch";
 import { codePointHex } from "../lib/unicode";
+import type { GeneralCategoryCore } from "../lib/ucd/character-data";
+import { useAsyncLoad } from "./useAsyncLoad";
+import { CHUNK_SIZE, chunkIndexOf, chunkRangeOf } from "../lib/ucd/chunk";
+import { chunks } from "../shared";
+import { deriveCharacterData } from "../lib/ucd/derived-data";
 
 const MIN_KEEPED_LINES = 128;
 const EXTRA_KEEPED_LINES = 10;
 
-function ShimmerHeader() {
+export function CodepointList(): ReactElement | null {
+  const searchParams = useSearchParams();
+
+  const generalCategoryParam = searchParams.get("gc");
+  const generalCategory =
+    generalCategoryParam != null &&
+    Object.hasOwn(GeneralCategoryShorthandMap, generalCategoryParam)
+      ? GeneralCategoryShorthandMap[generalCategoryParam]!
+      : undefined;
+
   return (
-    <div className="w-full mb-2">
-      <div className="h-[4.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
-    </div>
+    <CodepointListBody
+      key={generalCategory ?? "all"}
+      generalCategory={generalCategory}
+    />
   );
 }
 
-function ShimmerFooter() {
-  return (
-    <div className="w-full mt-2">
-      <div className="h-[4.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
-    </div>
-  );
-}
+type CodepointListBodyProps = {
+  generalCategory: GeneralCategoryCore | undefined;
+};
 
-export function CodepointList() {
+const GeneralCategoryShorthandMap: Record<string, GeneralCategoryCore> = {
+  Lu: "UPPERCASE_LETTER",
+  Ll: "LOWERCASE_LETTER",
+  Lt: "TITLECASE_LETTER",
+  Lm: "MODIFIER_LETTER",
+  Lo: "OTHER_LETTER",
+  Mn: "NONSPACING_MARK",
+  Mc: "SPACING_MARK",
+  Me: "ENCLOSING_MARK",
+  Nd: "DECIMAL_NUMBER",
+  Nl: "LETTER_NUMBER",
+  No: "OTHER_NUMBER",
+  Pc: "CONNECTOR_PUNCTUATION",
+  Pd: "DASH_PUNCTUATION",
+  Ps: "OPEN_PUNCTUATION",
+  Pe: "CLOSE_PUNCTUATION",
+  Pi: "INITIAL_PUNCTUATION",
+  Pf: "FINAL_PUNCTUATION",
+  Po: "OTHER_PUNCTUATION",
+  Sm: "MATH_SYMBOL",
+  Sc: "CURRENCY_SYMBOL",
+  Sk: "MODIFIER_SYMBOL",
+  So: "OTHER_SYMBOL",
+  Zs: "SPACE_SEPARATOR",
+  Zl: "LINE_SEPARATOR",
+  Zp: "PARAGRAPH_SEPARATOR",
+  Cc: "CONTROL",
+  Cf: "FORMAT",
+  Cs: "SURROGATE",
+  Co: "PRIVATE_USE",
+  Cn: "UNASSIGNED",
+};
+
+function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
+  const { generalCategory } = props;
   const searchParams = useSearchParams();
 
   const currentPositionParam = searchParams.get("current");
@@ -53,31 +105,108 @@ export function CodepointList() {
   );
   const vlistRef = useRef<VirtuosoHandle>(null);
 
-  const loadMoreBefore = useCallback(() => {
-    const frontier = listData.lowFrontier;
-    if (frontier <= 0) return; // Already at the beginning
-    const loadTo = Math.max(frontier - 256, 0);
-    const newCps: number[] = [];
-    for (let cp = loadTo; cp < frontier; cp++) {
-      newCps.push(cp);
-    }
-    setTimeout(() => {
-      backwardExpand(newCps, [loadTo, frontier]);
-    }, 0);
-  }, [backwardExpand, listData]);
+  const [loadMoreBeforeTarget, setLoadMoreBeforeTarget] = useState<
+    number | undefined
+  >(undefined);
+  const [loadMoreAfterTarget, setLoadMoreAfterTarget] = useState<
+    number | undefined
+  >(undefined);
 
-  const loadMoreAfter = useCallback(() => {
-    const frontier = listData.highFrontier;
-    if (frontier >= 0x110000) return; // Already at the end
-    const loadTo = Math.min(frontier + 256, 0x110000);
-    const newCps: number[] = [];
-    for (let cp = frontier; cp < loadTo; cp++) {
-      newCps.push(cp);
+  useEffect(() => {
+    if (
+      loadMoreBeforeTarget != null &&
+      (loadMoreBeforeTarget >= listData.offset || !layoutData.hasLowFrontier)
+    ) {
+      // Clear the target when reached
+      setLoadMoreBeforeTarget(undefined);
     }
-    setTimeout(() => {
-      forwardExpand(newCps, [frontier, loadTo]);
-    }, 0);
-  }, [forwardExpand, listData]);
+  }, [loadMoreBeforeTarget, listData.offset]);
+
+  useEffect(() => {
+    if (
+      loadMoreAfterTarget != null &&
+      (loadMoreAfterTarget <= listData.offset + listData.rows.length ||
+        !layoutData.hasHighFrontier)
+    ) {
+      // Clear the target when reached
+      setLoadMoreAfterTarget(undefined);
+    }
+  }, [loadMoreAfterTarget, listData]);
+
+  useAsyncLoad({
+    requestLoad:
+      loadMoreBeforeTarget != null &&
+      loadMoreBeforeTarget < listData.offset &&
+      layoutData.hasLowFrontier,
+    onRequestLoad: async () => {
+      const frontier = listData.lowFrontier;
+      if (frontier <= 0) {
+        // Already at the beginning
+        setLoadMoreBeforeTarget(undefined);
+        return;
+      }
+      const chunkIndex = chunkIndexOf(frontier - 1);
+      const [chunkStart] = chunkRangeOf(chunkIndex);
+      const chunk =
+        generalCategory != null ? await chunks.getChunk(chunkIndex) : undefined;
+      const indexedChunk = Object.fromEntries(
+        chunk?.characters.map((c) => [c.codePoint, c]) ?? [],
+      );
+      const newCps: number[] = [];
+      for (let cp = chunkStart; cp < frontier; cp++) {
+        if (generalCategory != null) {
+          const charData = deriveCharacterData(cp, indexedChunk[cp]);
+          if (charData.generalCategory !== generalCategory) {
+            continue;
+          }
+        }
+        newCps.push(cp);
+      }
+      backwardExpand(newCps, [chunkStart, frontier]);
+    },
+    onError: (error: unknown) => {
+      // TODO: show toast
+      console.error(error);
+    },
+  });
+
+  useAsyncLoad({
+    requestLoad:
+      loadMoreAfterTarget != null &&
+      loadMoreAfterTarget > listData.offset + listData.rows.length &&
+      layoutData.hasHighFrontier,
+    onRequestLoad: async () => {
+      const frontier = listData.highFrontier;
+      if (frontier >= 0x110000) {
+        // Already at the end
+        setLoadMoreAfterTarget(undefined);
+        return;
+      }
+      const chunkIndex = chunkIndexOf(frontier);
+      const [, chunkEnd] = chunkRangeOf(chunkIndex);
+      const chunk =
+        generalCategory != null ? await chunks.getChunk(chunkIndex) : undefined;
+      const indexedChunk = Object.fromEntries(
+        chunk?.characters.map((c) => [c.codePoint, c]) ?? [],
+      );
+      const newCps: number[] = [];
+      for (let cp = frontier; cp < chunkEnd; cp++) {
+        const charData = indexedChunk[cp];
+        if (charData) {
+          const derivedData = deriveCharacterData(cp, charData);
+          if (derivedData.generalCategory !== generalCategory) {
+            continue;
+          }
+        }
+        newCps.push(cp);
+      }
+      forwardExpand(newCps, [frontier, chunkEnd]);
+    },
+    onError: (error: unknown) => {
+      // TODO: show toast
+      console.error(error);
+    },
+  });
 
   const clearLines = useCallback(
     (dir: "backward" | "forward") => {
@@ -96,13 +225,13 @@ export function CodepointList() {
 
   const requestLoadMoreBefore = useCallback(() => {
     clearLines("forward");
-    loadMoreBefore();
-  }, [clearLines, loadMoreBefore]);
+    setLoadMoreBeforeTarget(listData.offset - 1);
+  }, [clearLines]);
 
   const requestLoadMoreAfter = useCallback(() => {
     clearLines("backward");
-    loadMoreAfter();
-  }, [clearLines, loadMoreAfter]);
+    setLoadMoreAfterTarget(listData.offset + listData.rows.length + 1);
+  }, [clearLines]);
 
   // Used for cache removal as a hint to how many lines should be kept
   const numLinesShown = useRef(0);
@@ -126,9 +255,9 @@ export function CodepointList() {
   useEffect(() => {
     if (initialLoadDone.current) return;
     initialLoadDone.current = true;
-    loadMoreBefore();
-    loadMoreAfter();
-  }, [loadMoreBefore, loadMoreAfter]);
+    setLoadMoreBeforeTarget(layoutData.offset - 1);
+    setLoadMoreAfterTarget(layoutData.offset + layoutData.rows.length + 1);
+  }, [setLoadMoreBeforeTarget, setLoadMoreAfterTarget, layoutData]);
 
   const [initializePosition, setInitializePosition] = useState(true);
 
@@ -260,6 +389,22 @@ export function CodepointList() {
         onClose={handleCloseModal}
         onNavigate={handleNavigate}
       />
+    </div>
+  );
+}
+
+function ShimmerHeader() {
+  return (
+    <div className="w-full mb-2">
+      <div className="h-[4.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
+    </div>
+  );
+}
+
+function ShimmerFooter() {
+  return (
+    <div className="w-full mt-2">
+      <div className="h-[4.5rem] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded" />
     </div>
   );
 }

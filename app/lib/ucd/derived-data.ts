@@ -43,16 +43,15 @@ export function deriveCharacterData(
     generalCategory = "UNASSIGNED",
   } = baseData;
   const name = deriveName(codePoint, baseName, nameDerivation);
-  if (
+  const derivedGeneralCategory: GeneralCategoryCore =
     typeof generalCategory === "number" ||
     generalCategory === "GENERAL_CATEGORY_UNSPECIFIED"
-  ) {
-    throw new TypeError(`Invalid general category: ${generalCategory}`);
-  }
+      ? "UNASSIGNED"
+      : generalCategory;
   return {
     codePoint,
     name,
-    generalCategory,
+    generalCategory: derivedGeneralCategory,
   };
 }
 
