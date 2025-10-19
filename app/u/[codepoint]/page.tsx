@@ -2,9 +2,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { ReactElement } from "react";
+import type { Metadata } from "next";
 
 import { parseCPNumber, formatCPNumber } from "../cp-number";
 import { CharacterDisplay } from "../CharacterDisplay";
+import { sanitizeForHtmlSerialization } from "../../ArbitraryText";
 import { chunks } from "../../shared";
 import { chunkIndexOf } from "../../lib/ucd/chunk";
 import { deriveCharacterData } from "../../lib/ucd/derived-data";
@@ -13,6 +15,77 @@ interface PageProps {
   params: Promise<{
     codepoint: string;
   }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { codepoint } = await params;
+
+  // Parse the codepoint
+  const cp = parseCPNumber(codepoint);
+
+  if (cp == null) {
+    // If parsing failed, check if it's a single character
+    const codepoints = Array.from(decodeURIComponent(codepoint));
+    if (codepoints.length === 1) {
+      const charCp = codepoints[0].codePointAt(0);
+      if (charCp != null) {
+        const normalized = formatCPNumber(charCp);
+        const chunk = await chunks.getChunk(chunkIndexOf(charCp));
+        const entry = chunk.characters.find((c) => c.codePoint === charCp);
+        const charData = deriveCharacterData(charCp, entry);
+        const character = String.fromCodePoint(charCp);
+
+        const sanitized = sanitizeForHtmlSerialization(character);
+        const safeChar = sanitized ? ` - ${sanitized}` : "";
+        const title = `U+${normalized} ${charData.name}${safeChar}`;
+        const description = `Unicode character U+${normalized}: ${charData.name}${safeChar}. General Category: ${charData.generalCategory}`;
+
+        return {
+          title,
+          description,
+          openGraph: {
+            title,
+            description,
+          },
+          twitter: {
+            card: "summary",
+            title,
+            description,
+          },
+        };
+      }
+    }
+    return {
+      title: "Invalid Codepoint",
+    };
+  }
+
+  const normalized = formatCPNumber(cp);
+  const chunk = await chunks.getChunk(chunkIndexOf(cp));
+  const entry = chunk.characters.find((c) => c.codePoint === cp);
+  const charData = deriveCharacterData(cp, entry);
+  const character = String.fromCodePoint(cp);
+
+  const sanitized = sanitizeForHtmlSerialization(character);
+  const safeChar = sanitized ? ` - ${sanitized}` : "";
+  const title = `U+${normalized} ${charData.name}${safeChar}`;
+  const description = `Data page for Unicode character U+${normalized}: ${charData.name}${safeChar}.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+  };
 }
 
 export default async function CodepointPage({

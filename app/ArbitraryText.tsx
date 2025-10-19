@@ -20,12 +20,22 @@ export function ArbitraryText(props: ArbitraryTextProps): ReactElement | null {
     setHydrated(true);
   }, []);
 
-  const safeText = hydrated ? children : escapeText(children);
+  const safeText = hydrated ? children : sanitizeForHtmlSerialization(children);
 
   return <>{safeText}</>;
 }
 
-function escapeText(text: string): string {
+/**
+ * Sanitizes text for safe HTML serialization by removing characters
+ * that would cause parsing errors or emit warnings in HTML.
+ *
+ * Removes:
+ * - NULL and control characters (except whitespace)
+ * - CR (U+000D) which gets normalized
+ * - Surrogates that are not part of valid pairs
+ * - Noncharacters
+ */
+export function sanitizeForHtmlSerialization(text: string): string {
   // See the following algorithm for allowed characters:
   //
   // - 13.2.3.5 Preprocessing the input stream https://html.spec.whatwg.org/multipage/parsing.html#preprocessing-the-input-stream
