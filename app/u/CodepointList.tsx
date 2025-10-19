@@ -10,6 +10,7 @@ import {
 } from "react";
 import { useSearchParams } from "next/navigation";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+import { toast } from "sonner";
 import { parseCPNumber, formatCPNumber } from "./cp-number";
 import { CodepointModal } from "./CodepointModal";
 import {
@@ -167,8 +168,11 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
       backwardExpand(newCps, [chunkStart, frontier]);
     },
     onError: (error: unknown) => {
-      // TODO: show toast
       console.error(error);
+      toast.error("Failed to load data", {
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      });
     },
   });
 
@@ -204,8 +208,11 @@ function CodepointListBody(props: CodepointListBodyProps): ReactElement | null {
       forwardExpand(newCps, [frontier, chunkEnd]);
     },
     onError: (error: unknown) => {
-      // TODO: show toast
       console.error(error);
+      toast.error("Failed to load data", {
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      });
     },
   });
 
