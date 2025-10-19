@@ -35,7 +35,9 @@ export function CodepointCell({ codePoint, onLinkClick }: CodepointCellProps) {
 }
 
 export function EmptyPaddingCell() {
-  return <div className="aspect-square w-16" />;
+  return (
+    <div className="aspect-square border border-gray-300 dark:border-gray-700 rounded w-16" />
+  );
 }
 
 export function EmptyShimmerCell() {
