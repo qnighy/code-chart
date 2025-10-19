@@ -141,7 +141,7 @@ export default async function CodepointPage({
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8">
           {prevCp !== null ? (
             <Link
-              href={`/u/${formatCPNumber(prevCp)}`}
+              href={`/u?current=${formatCPNumber(prevCp)}&cp=${formatCPNumber(prevCp)}`}
               className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
               aria-label="Previous character"
             >
@@ -161,7 +161,7 @@ export default async function CodepointPage({
 
           {nextCp !== null ? (
             <Link
-              href={`/u/${formatCPNumber(nextCp)}`}
+              href={`/u?current=${formatCPNumber(nextCp)}&cp=${formatCPNumber(nextCp)}`}
               className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
               aria-label="Next character"
             >
