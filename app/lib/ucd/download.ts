@@ -1,9 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { ucdTmpPath } from "./path.ts";
+import { ucdNextCachePath, ucdTmpPath } from "./path.ts";
 
 export async function downloadUCD(version: string): Promise<Buffer> {
   const destPath = path.join(ucdTmpPath, `UCD-${version}.zip`);
+  const destPathNextCache = path.join(ucdNextCachePath, `UCD-${version}.zip`);
   const tempPath = path.join(ucdTmpPath, `UCD-${version}.zip.tmp`);
 
   // Bail early if the file already exists
@@ -20,6 +21,21 @@ export async function downloadUCD(version: string): Promise<Buffer> {
       throw error;
     }
     // File doesn't exist, proceed with download
+  }
+
+  // Also check in Next.js cache directory
+  try {
+    await fs.copyFile(destPathNextCache, destPath);
+    return await fs.readFile(destPath);
+  } catch (error) {
+    // Only catch ENOENT (file doesn't exist), rethrow other errors
+    if (
+      !(error instanceof Error) ||
+      (error as NodeJS.ErrnoException).code !== "ENOENT"
+    ) {
+      throw error;
+    }
+    // File doesn't exist in cache, proceed with download
   }
 
   // Ensure the directory exists
@@ -42,6 +58,10 @@ export async function downloadUCD(version: string): Promise<Buffer> {
 
   // Rename to final destination
   await fs.rename(tempPath, destPath);
+
+  // Also copy to Next.js cache directory
+  await fs.mkdir(ucdNextCachePath, { recursive: true });
+  await fs.copyFile(destPath, destPathNextCache);
 
   return buffer;
 }
