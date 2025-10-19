@@ -62,7 +62,8 @@ export function CharacterDisplay({
     `${className} ${isSubstitute ? replacementClassName : ordinaryClassName}`.trim();
 
   return (
-    <div className={appliedClassName} onCopy={handleCopy}>
+    // dir=auto to isolate directionality of individual characters
+    <div className={appliedClassName} onCopy={handleCopy} dir="auto">
       <ArbitraryText>{displayChar}</ArbitraryText>
     </div>
   );
