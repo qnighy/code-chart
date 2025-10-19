@@ -1,7 +1,25 @@
 import type { ReactElement } from "react";
+import type { Metadata } from "next";
 import { connection } from "next/server";
 
 import { CodepointList } from "./CodepointList";
+
+export const metadata: Metadata = {
+  title: "Unicode Code Points",
+  description:
+    "Browse and explore all Unicode code points. Search through the complete Unicode character database.",
+  openGraph: {
+    title: "Unicode Code Points",
+    description:
+      "Browse and explore all Unicode code points. Search through the complete Unicode character database.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Unicode Code Points",
+    description:
+      "Browse and explore all Unicode code points. Search through the complete Unicode character database.",
+  },
+};
 
 export default async function CodepointListPage(): Promise<ReactElement> {
   // Prevent the page from being rendered at build time
