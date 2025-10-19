@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 import { parseCPNumber, formatCPNumber } from "../cp-number";
 import { CharacterDisplay } from "../CharacterDisplay";
-import { sanitizeForHtmlSerialization } from "../../ArbitraryText";
+import { sanitizeForHtmlSerialization } from "../ArbitraryText.helper";
 import { chunks } from "../../shared";
 import { chunkIndexOf } from "../../lib/ucd/chunk";
 import { deriveCharacterData } from "../../lib/ucd/derived-data";
