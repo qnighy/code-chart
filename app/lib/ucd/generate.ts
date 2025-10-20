@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import { codePointHex } from "../unicode";
 import { UCD } from "./handle";
 import { WritableChunks } from "./writable-chunks";
-import { CHUNK_SIZE, chunkIndexOf } from "./chunk";
+import { CHUNK_SIZE, chunkIndexOf, getCharacterInChunkOrCreate } from "./chunk";
 import {
   NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH,
   NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
@@ -12,11 +12,13 @@ import {
   NAME_DERIVATION_EGYPTIAN_HIEROGLYPH,
   NAME_DERIVATION_HANGUL_SYLLABLE,
   NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER,
+  NAME_DERIVATION_NONCHARACTER,
   NAME_DERIVATION_NUSHU_CHARACTER,
   NAME_DERIVATION_PRIVATE_USE,
   NAME_DERIVATION_SURROGATE,
   NAME_DERIVATION_TANGUT_IDEOGRAPH,
   NAME_DERIVATION_UNSPECIFIED,
+  UNASSIGNED,
   type NameDerivation,
 } from "./proto/character_data_pb";
 
@@ -43,10 +45,10 @@ export async function generateUCDChunks() {
   const chunks = new WritableChunks(outputPath);
 
   const numChunks = 0x110000 / CHUNK_SIZE;
+  // Initialize all chunks first
   for (let i = 0; i < numChunks; i++) {
     const chunk = await chunks.openChunk(i);
     chunk.data.chunkIndex = i;
-    chunk.data.characters = [];
     chunk.dirty = true;
     chunk.dispose();
   }
@@ -74,7 +76,33 @@ export async function generateUCDChunks() {
     }
   }
 
+  // Noncharacters; they are not listed in UnicodeData.txt
+  for (const codePoint of nonCharacters()) {
+    const chunk = await chunks.openChunk(chunkIndexOf(codePoint));
+    try {
+      const charData = getCharacterInChunkOrCreate(chunk.data, codePoint);
+      charData.nameDerivation = NAME_DERIVATION_NONCHARACTER;
+      charData.generalCategory = UNASSIGNED;
+      chunk.dirty = true;
+    } finally {
+      chunk.dispose();
+    }
+  }
+
   await chunks.disposeAsync();
+}
+
+// §23.7 Noncharacters
+// https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-23/#G12612
+function* nonCharacters(): IterableIterator<number> {
+  for (let cp = 0xfdd0; cp <= 0xfdef; cp++) {
+    yield cp;
+  }
+  for (let plane = 0; plane <= 0x10; plane++) {
+    const base = plane << 16;
+    yield base | 0xfffe;
+    yield base | 0xffff;
+  }
 }
 
 const NameDerivationLabelMap: Record<string, NameDerivation> = {

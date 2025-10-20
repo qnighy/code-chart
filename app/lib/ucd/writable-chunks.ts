@@ -89,7 +89,7 @@ export class WritableChunks {
         error instanceof Error &&
         (error as NodeJS.ErrnoException).code === "ENOENT"
       ) {
-        return {} as ChunkData;
+        return decodeChunkData(new Uint8Array());
       }
       throw error;
     }
