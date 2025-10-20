@@ -5,25 +5,7 @@ import { codePointHex } from "../unicode";
 import { UCD } from "./handle";
 import { WritableChunks } from "./writable-chunks";
 import { CHUNK_SIZE, chunkIndexOf } from "./chunk";
-import type { GeneralCategoryShorthand } from "./unicode-data";
-import { type GeneralCategoryReq } from "./character-data";
 import {
-  CLOSE_PUNCTUATION,
-  CONNECTOR_PUNCTUATION,
-  CONTROL,
-  CURRENCY_SYMBOL,
-  DASH_PUNCTUATION,
-  DECIMAL_NUMBER,
-  ENCLOSING_MARK,
-  FINAL_PUNCTUATION,
-  FORMAT,
-  INITIAL_PUNCTUATION,
-  LETTER_NUMBER,
-  LINE_SEPARATOR,
-  LOWERCASE_LETTER,
-  MATH_SYMBOL,
-  MODIFIER_LETTER,
-  MODIFIER_SYMBOL,
   NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH,
   NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
   NAME_DERIVATION_CONTROL,
@@ -35,20 +17,6 @@ import {
   NAME_DERIVATION_SURROGATE,
   NAME_DERIVATION_TANGUT_IDEOGRAPH,
   NAME_DERIVATION_UNSPECIFIED,
-  NONSPACING_MARK,
-  OPEN_PUNCTUATION,
-  OTHER_LETTER,
-  OTHER_NUMBER,
-  OTHER_PUNCTUATION,
-  OTHER_SYMBOL,
-  PARAGRAPH_SEPARATOR,
-  PRIVATE_USE,
-  SPACE_SEPARATOR,
-  SPACING_MARK,
-  SURROGATE,
-  TITLECASE_LETTER,
-  UNASSIGNED,
-  UPPERCASE_LETTER,
   type NameDerivation,
 } from "./proto/character_data_pb";
 
@@ -97,7 +65,7 @@ export async function generateUCDChunks() {
           codePoint,
           name: nameDerivation === NAME_DERIVATION_UNSPECIFIED ? row.name : "",
           nameDerivation,
-          generalCategory: generalCategoryMap[row.generalCategory],
+          generalCategory: row.generalCategory,
         });
         chunk.dirty = true;
       } finally {
@@ -185,40 +153,6 @@ function inferNameDerivation(
 
   return NAME_DERIVATION_UNSPECIFIED;
 }
-
-const generalCategoryMap: Record<GeneralCategoryShorthand, GeneralCategoryReq> =
-  {
-    Lu: UPPERCASE_LETTER,
-    Ll: LOWERCASE_LETTER,
-    Lt: TITLECASE_LETTER,
-    Lm: MODIFIER_LETTER,
-    Lo: OTHER_LETTER,
-    Mn: NONSPACING_MARK,
-    Mc: SPACING_MARK,
-    Me: ENCLOSING_MARK,
-    Nd: DECIMAL_NUMBER,
-    Nl: LETTER_NUMBER,
-    No: OTHER_NUMBER,
-    Pc: CONNECTOR_PUNCTUATION,
-    Pd: DASH_PUNCTUATION,
-    Ps: OPEN_PUNCTUATION,
-    Pe: CLOSE_PUNCTUATION,
-    Pi: INITIAL_PUNCTUATION,
-    Pf: FINAL_PUNCTUATION,
-    Po: OTHER_PUNCTUATION,
-    Sm: MATH_SYMBOL,
-    Sc: CURRENCY_SYMBOL,
-    Sk: MODIFIER_SYMBOL,
-    So: OTHER_SYMBOL,
-    Zs: SPACE_SEPARATOR,
-    Zl: LINE_SEPARATOR,
-    Zp: PARAGRAPH_SEPARATOR,
-    Cc: CONTROL,
-    Cf: FORMAT,
-    Cs: SURROGATE,
-    Co: PRIVATE_USE,
-    Cn: UNASSIGNED,
-  };
 
 if (import.meta.main) {
   await generateUCDChunks();

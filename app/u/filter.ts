@@ -1,5 +1,9 @@
 import type { ReadonlyURLSearchParams } from "next/navigation";
-import { type GeneralCategoryReq } from "../lib/ucd/character-data";
+import {
+  GENERAL_CATEGORY_SHORTHANDS,
+  generalCategoryFromShorthand,
+  type GeneralCategoryReq,
+} from "../lib/ucd/character-data";
 import {
   CLOSE_PUNCTUATION,
   CONNECTOR_PUNCTUATION,
@@ -84,43 +88,6 @@ export const GENERAL_CATEGORIES: readonly GeneralCategoryReq[] = [
   UNASSIGNED,
 ];
 
-const GC_FROM_SHORTHAND: Record<string, GeneralCategoryReq> = {
-  Lu: UPPERCASE_LETTER,
-  Ll: LOWERCASE_LETTER,
-  Lt: TITLECASE_LETTER,
-  Lm: MODIFIER_LETTER,
-  Lo: OTHER_LETTER,
-  Mn: NONSPACING_MARK,
-  Mc: SPACING_MARK,
-  Me: ENCLOSING_MARK,
-  Nd: DECIMAL_NUMBER,
-  Nl: LETTER_NUMBER,
-  No: OTHER_NUMBER,
-  Pc: CONNECTOR_PUNCTUATION,
-  Pd: DASH_PUNCTUATION,
-  Ps: OPEN_PUNCTUATION,
-  Pe: CLOSE_PUNCTUATION,
-  Pi: INITIAL_PUNCTUATION,
-  Pf: FINAL_PUNCTUATION,
-  Po: OTHER_PUNCTUATION,
-  Sm: MATH_SYMBOL,
-  Sc: CURRENCY_SYMBOL,
-  Sk: MODIFIER_SYMBOL,
-  So: OTHER_SYMBOL,
-  Zs: SPACE_SEPARATOR,
-  Zl: LINE_SEPARATOR,
-  Zp: PARAGRAPH_SEPARATOR,
-  Cc: CONTROL,
-  Cf: FORMAT,
-  Cs: SURROGATE,
-  Co: PRIVATE_USE,
-  Cn: UNASSIGNED,
-};
-
-const GC_TO_SHORTHAND: Record<GeneralCategoryReq, string> = Object.fromEntries(
-  Object.entries(GC_FROM_SHORTHAND).map(([k, v]) => [v, k]),
-) as Record<GeneralCategoryReq, string>;
-
 export function normalizeGeneralCategories(
   generalCategories: readonly GeneralCategoryReq[],
 ): GeneralCategoryReq[] {
@@ -134,7 +101,7 @@ export function filterToSearchParams(
 ): void {
   if (filter.generalCategory.length > 0) {
     const gcParams = normalizeGeneralCategories(filter.generalCategory)
-      .map((gc) => GC_TO_SHORTHAND[gc])
+      .map((gc) => GENERAL_CATEGORY_SHORTHANDS[gc])
       .join(",");
     searchParams.set("gc", gcParams);
   } else {
@@ -155,8 +122,9 @@ export function filterFromSearchParams(
   const generalCategory: GeneralCategoryReq[] = [];
   if (gcParam != null && gcParam.length > 0) {
     for (const shorthand of gcParam.split(",")) {
-      if (Object.hasOwn(GC_FROM_SHORTHAND, shorthand)) {
-        generalCategory.push(GC_FROM_SHORTHAND[shorthand]!);
+      const gc = generalCategoryFromShorthand(shorthand);
+      if (gc) {
+        generalCategory.push(gc);
       }
     }
   }

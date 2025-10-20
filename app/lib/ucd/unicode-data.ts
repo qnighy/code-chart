@@ -1,8 +1,13 @@
+import {
+  generalCategoryFromShorthand,
+  type GeneralCategoryReq,
+} from "./character-data";
+
 export type UnicodeDataRowPair = {
   codePointStart: number;
   codePointEnd: number;
   name: string;
-  generalCategory: GeneralCategoryShorthand;
+  generalCategory: GeneralCategoryReq;
 };
 
 export async function* parseUnicodeDataLines(
@@ -54,7 +59,7 @@ export async function* parseUnicodeDataLines(
 export type UnicodeDataRow = {
   codePoint: number;
   name: string;
-  generalCategory: GeneralCategoryShorthand;
+  generalCategory: GeneralCategoryReq;
 };
 
 export function parseUnicodeDataLine(line: string): UnicodeDataRow {
@@ -71,81 +76,19 @@ export function parseUnicodeDataLine(line: string): UnicodeDataRow {
 
   const name = fields[1]!;
 
-  const generalCategory = fields[2]!;
-  if (
-    !GeneralCategoryShorthands.has(generalCategory as GeneralCategoryShorthand)
-  ) {
-    throw new SyntaxError(`Invalid General Category: ${generalCategory}`);
+  const generalCategoryShorthand = fields[2]!;
+  const generalCategory = generalCategoryFromShorthand(
+    generalCategoryShorthand,
+  );
+  if (!generalCategory) {
+    throw new SyntaxError(
+      `Invalid General Category: ${generalCategoryShorthand}`,
+    );
   }
 
   return {
     codePoint,
     name,
-    generalCategory: generalCategory as GeneralCategoryShorthand,
+    generalCategory,
   };
 }
-
-export type GeneralCategoryShorthand =
-  | "Lu"
-  | "Ll"
-  | "Lt"
-  | "Lm"
-  | "Lo"
-  | "Mn"
-  | "Mc"
-  | "Me"
-  | "Nd"
-  | "Nl"
-  | "No"
-  | "Pc"
-  | "Pd"
-  | "Ps"
-  | "Pe"
-  | "Pi"
-  | "Pf"
-  | "Po"
-  | "Sm"
-  | "Sc"
-  | "Sk"
-  | "So"
-  | "Zs"
-  | "Zl"
-  | "Zp"
-  | "Cc"
-  | "Cf"
-  | "Cs"
-  | "Co"
-  | "Cn";
-
-const GeneralCategoryShorthands = new Set<GeneralCategoryShorthand>([
-  "Lu",
-  "Ll",
-  "Lt",
-  "Lm",
-  "Lo",
-  "Mn",
-  "Mc",
-  "Me",
-  "Nd",
-  "Nl",
-  "No",
-  "Pc",
-  "Pd",
-  "Ps",
-  "Pe",
-  "Pi",
-  "Pf",
-  "Po",
-  "Sm",
-  "Sc",
-  "Sk",
-  "So",
-  "Zs",
-  "Zl",
-  "Zp",
-  "Cc",
-  "Cf",
-  "Cs",
-  "Co",
-  "Cn",
-]);

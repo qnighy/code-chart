@@ -6,6 +6,7 @@ import {
   type UnicodeDataRow,
   type UnicodeDataRowPair,
 } from "./unicode-data";
+import { CONTROL, OTHER_LETTER } from "./proto/character_data_pb";
 
 describe("parseUnicodeDataLine", () => {
   it("parses a line: U+0000", () => {
@@ -15,7 +16,7 @@ describe("parseUnicodeDataLine", () => {
     expect(result).toEqual<UnicodeDataRow>({
       codePoint: 0x0000,
       name: "<control>",
-      generalCategory: "Cc",
+      generalCategory: CONTROL,
     });
   });
 });
@@ -30,7 +31,7 @@ describe("parseUnicodeDataLines", () => {
         codePointStart: 0x0000,
         codePointEnd: 0x0000,
         name: "<control>",
-        generalCategory: "Cc",
+        generalCategory: CONTROL,
       },
     ]);
   });
@@ -47,7 +48,7 @@ describe("parseUnicodeDataLines", () => {
         codePointStart: 0x4e00,
         codePointEnd: 0x9fff,
         name: "<CJK Ideograph>",
-        generalCategory: "Lo",
+        generalCategory: OTHER_LETTER,
       },
     ]);
   });

@@ -160,6 +160,73 @@ export const GENERAL_CATEGORY_NAMES: Record<GeneralCategoryReq, string> = {
   [UNASSIGNED]: "Unassigned",
 };
 
+const GENERAL_CATEGORY_FROM_NAME: Record<string, GeneralCategoryReq> =
+  Object.fromEntries(
+    Object.entries(GENERAL_CATEGORY_NAMES).map(([key, value]) => [
+      value,
+      Number(key) as GeneralCategoryReq,
+    ]),
+  );
+
+export function generalCategoryFromName(
+  name: string,
+): GeneralCategoryReq | undefined {
+  if (Object.hasOwn(GENERAL_CATEGORY_FROM_NAME, name)) {
+    return GENERAL_CATEGORY_FROM_NAME[name]!;
+  }
+  return undefined;
+}
+
+export const GENERAL_CATEGORY_SHORTHANDS: Record<GeneralCategoryReq, string> = {
+  [UPPERCASE_LETTER]: "Lu",
+  [LOWERCASE_LETTER]: "Ll",
+  [TITLECASE_LETTER]: "Lt",
+  [MODIFIER_LETTER]: "Lm",
+  [OTHER_LETTER]: "Lo",
+  [NONSPACING_MARK]: "Mn",
+  [SPACING_MARK]: "Mc",
+  [ENCLOSING_MARK]: "Me",
+  [DECIMAL_NUMBER]: "Nd",
+  [LETTER_NUMBER]: "Nl",
+  [OTHER_NUMBER]: "No",
+  [CONNECTOR_PUNCTUATION]: "Pc",
+  [DASH_PUNCTUATION]: "Pd",
+  [OPEN_PUNCTUATION]: "Ps",
+  [CLOSE_PUNCTUATION]: "Pe",
+  [INITIAL_PUNCTUATION]: "Pi",
+  [FINAL_PUNCTUATION]: "Pf",
+  [OTHER_PUNCTUATION]: "Po",
+  [MATH_SYMBOL]: "Sm",
+  [CURRENCY_SYMBOL]: "Sc",
+  [MODIFIER_SYMBOL]: "Sk",
+  [OTHER_SYMBOL]: "So",
+  [SPACE_SEPARATOR]: "Zs",
+  [LINE_SEPARATOR]: "Zl",
+  [PARAGRAPH_SEPARATOR]: "Zp",
+  [CONTROL]: "Cc",
+  [FORMAT]: "Cf",
+  [SURROGATE]: "Cs",
+  [PRIVATE_USE]: "Co",
+  [UNASSIGNED]: "Cn",
+};
+
+const GENERAL_CATEGORY_FROM_SHORTHAND: Record<string, GeneralCategoryReq> =
+  Object.fromEntries(
+    Object.entries(GENERAL_CATEGORY_SHORTHANDS).map(([key, value]) => [
+      value,
+      Number(key) as GeneralCategoryReq,
+    ]),
+  );
+
+export function generalCategoryFromShorthand(
+  shorthand: string,
+): GeneralCategoryReq | undefined {
+  if (Object.hasOwn(GENERAL_CATEGORY_FROM_SHORTHAND, shorthand)) {
+    return GENERAL_CATEGORY_FROM_SHORTHAND[shorthand]!;
+  }
+  return undefined;
+}
+
 const GENERAL_CATEGORIES_SET = new Set<GeneralCategoryOpt>([
   GENERAL_CATEGORY_UNSPECIFIED,
   UPPERCASE_LETTER,
