@@ -17,6 +17,7 @@ export function CodepointCell({ codePoint, onLinkClick }: CodepointCellProps) {
     <Link
       key={codePointHex(codePoint)}
       href={`/u/${cpHex}`}
+      prefetch={false}
       onClick={(e) => onLinkClick(e, codePoint)}
       className="aspect-square border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center relative group w-16"
     >
