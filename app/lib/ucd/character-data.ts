@@ -43,6 +43,8 @@ import {
   TITLECASE_LETTER,
   UNASSIGNED,
   UPPERCASE_LETTER,
+  type GeneralCategory,
+  type NameDerivation,
 } from "./proto/character_data_pb";
 
 export type NameDerivationOpt =
@@ -61,6 +63,34 @@ export type NameDerivationReq =
   | typeof NAME_DERIVATION_TANGUT_IDEOGRAPH
   | typeof NAME_DERIVATION_NUSHU_CHARACTER
   | typeof NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER;
+
+const NAME_DERIVATIONS_SET = new Set<NameDerivationOpt>([
+  NAME_DERIVATION_UNSPECIFIED,
+  NAME_DERIVATION_CONTROL,
+  NAME_DERIVATION_RESERVED,
+  NAME_DERIVATION_NONCHARACTER,
+  NAME_DERIVATION_PRIVATE_USE,
+  NAME_DERIVATION_SURROGATE,
+  NAME_DERIVATION_HANGUL_SYLLABLE,
+  NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH,
+  NAME_DERIVATION_EGYPTIAN_HIEROGLYPH,
+  NAME_DERIVATION_TANGUT_IDEOGRAPH,
+  NAME_DERIVATION_NUSHU_CHARACTER,
+  NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER,
+]);
+
+export function isNameDerivationOpt(
+  value: NameDerivation,
+): value is NameDerivationOpt {
+  return NAME_DERIVATIONS_SET.has(value as NameDerivationOpt);
+}
+
+export function isNameDerivationReq(
+  value: NameDerivation,
+): value is NameDerivationReq {
+  return value !== NAME_DERIVATION_UNSPECIFIED && isNameDerivationOpt(value);
+}
 
 export type GeneralCategoryOpt =
   | typeof GENERAL_CATEGORY_UNSPECIFIED
@@ -129,3 +159,49 @@ export const GENERAL_CATEGORY_NAMES: Record<GeneralCategoryReq, string> = {
   [PRIVATE_USE]: "Private_Use",
   [UNASSIGNED]: "Unassigned",
 };
+
+const GENERAL_CATEGORIES_SET = new Set<GeneralCategoryOpt>([
+  GENERAL_CATEGORY_UNSPECIFIED,
+  UPPERCASE_LETTER,
+  LOWERCASE_LETTER,
+  TITLECASE_LETTER,
+  MODIFIER_LETTER,
+  OTHER_LETTER,
+  NONSPACING_MARK,
+  SPACING_MARK,
+  ENCLOSING_MARK,
+  DECIMAL_NUMBER,
+  LETTER_NUMBER,
+  OTHER_NUMBER,
+  CONNECTOR_PUNCTUATION,
+  DASH_PUNCTUATION,
+  OPEN_PUNCTUATION,
+  CLOSE_PUNCTUATION,
+  INITIAL_PUNCTUATION,
+  FINAL_PUNCTUATION,
+  OTHER_PUNCTUATION,
+  MATH_SYMBOL,
+  CURRENCY_SYMBOL,
+  MODIFIER_SYMBOL,
+  OTHER_SYMBOL,
+  SPACE_SEPARATOR,
+  LINE_SEPARATOR,
+  PARAGRAPH_SEPARATOR,
+  CONTROL,
+  FORMAT,
+  SURROGATE,
+  PRIVATE_USE,
+  UNASSIGNED,
+]);
+
+export function isGeneralCategoryOpt(
+  value: GeneralCategory,
+): value is GeneralCategoryOpt {
+  return GENERAL_CATEGORIES_SET.has(value as GeneralCategoryOpt);
+}
+
+export function isGeneralCategoryReq(
+  value: GeneralCategory,
+): value is GeneralCategoryReq {
+  return value !== GENERAL_CATEGORY_UNSPECIFIED && isGeneralCategoryOpt(value);
+}

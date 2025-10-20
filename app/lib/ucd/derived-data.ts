@@ -1,40 +1,12 @@
 import { codePointHex, codePointHexName } from "../unicode";
 import {
+  isGeneralCategoryReq,
   type GeneralCategoryReq,
   type NameDerivationReq,
 } from "./character-data";
 import {
   NAME_DERIVATION_RESERVED,
   UNASSIGNED,
-  UPPERCASE_LETTER,
-  LOWERCASE_LETTER,
-  TITLECASE_LETTER,
-  MODIFIER_LETTER,
-  OTHER_LETTER,
-  NONSPACING_MARK,
-  SPACING_MARK,
-  ENCLOSING_MARK,
-  DECIMAL_NUMBER,
-  LETTER_NUMBER,
-  OTHER_NUMBER,
-  CONNECTOR_PUNCTUATION,
-  DASH_PUNCTUATION,
-  OPEN_PUNCTUATION,
-  CLOSE_PUNCTUATION,
-  INITIAL_PUNCTUATION,
-  FINAL_PUNCTUATION,
-  OTHER_PUNCTUATION,
-  MATH_SYMBOL,
-  CURRENCY_SYMBOL,
-  MODIFIER_SYMBOL,
-  OTHER_SYMBOL,
-  SPACE_SEPARATOR,
-  LINE_SEPARATOR,
-  PARAGRAPH_SEPARATOR,
-  CONTROL,
-  FORMAT,
-  SURROGATE,
-  PRIVATE_USE,
   NAME_DERIVATION_CONTROL,
   NAME_DERIVATION_NONCHARACTER,
   NAME_DERIVATION_PRIVATE_USE,
@@ -90,10 +62,10 @@ export function deriveCharacterData(
     generalCategory = UNASSIGNED,
   } = baseData;
   const name = deriveName(codePoint, baseName, nameDerivation);
-  const derivedGeneralCategory: GeneralCategoryReq = GENERAL_CATEGORY_CORES.has(
-    generalCategory as GeneralCategoryReq,
+  const derivedGeneralCategory: GeneralCategoryReq = isGeneralCategoryReq(
+    generalCategory,
   )
-    ? (generalCategory as GeneralCategoryReq)
+    ? generalCategory
     : UNASSIGNED;
   return {
     codePoint,
@@ -101,39 +73,6 @@ export function deriveCharacterData(
     generalCategory: derivedGeneralCategory,
   };
 }
-
-const GENERAL_CATEGORY_CORES: Set<GeneralCategoryReq> = new Set([
-  UPPERCASE_LETTER,
-  LOWERCASE_LETTER,
-  TITLECASE_LETTER,
-  MODIFIER_LETTER,
-  OTHER_LETTER,
-  NONSPACING_MARK,
-  SPACING_MARK,
-  ENCLOSING_MARK,
-  DECIMAL_NUMBER,
-  LETTER_NUMBER,
-  OTHER_NUMBER,
-  CONNECTOR_PUNCTUATION,
-  DASH_PUNCTUATION,
-  OPEN_PUNCTUATION,
-  CLOSE_PUNCTUATION,
-  INITIAL_PUNCTUATION,
-  FINAL_PUNCTUATION,
-  OTHER_PUNCTUATION,
-  MATH_SYMBOL,
-  CURRENCY_SYMBOL,
-  MODIFIER_SYMBOL,
-  OTHER_SYMBOL,
-  SPACE_SEPARATOR,
-  LINE_SEPARATOR,
-  PARAGRAPH_SEPARATOR,
-  CONTROL,
-  FORMAT,
-  SURROGATE,
-  PRIVATE_USE,
-  UNASSIGNED,
-]);
 
 const nameTemplates: Record<
   Exclude<NameDerivationReq, typeof NAME_DERIVATION_HANGUL_SYLLABLE>,
