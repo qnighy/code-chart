@@ -16,7 +16,7 @@ import {
   NAME_DERIVATION_SURROGATE,
   NAME_DERIVATION_TANGUT_IDEOGRAPH,
   NAME_DERIVATION_UNSPECIFIED,
-} from "./character-data";
+} from "./proto/character_data_pb";
 
 describe("deriveName", () => {
   it("returns the declared name", () => {

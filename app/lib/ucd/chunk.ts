@@ -1,5 +1,3 @@
-import type { CharacterData } from "./character-data";
-
 /**
  * The number of code points, including those unassigned, in each chunk.
  */
@@ -18,20 +16,3 @@ export function chunkRangeOf(chunkIndex: number): readonly [number, number] {
 export function chunkNameOf(chunkIndex: number): string {
   return `chunk${CHUNK_SIZE}-${chunkIndex.toString().padStart(4, "0")}.binpb`;
 }
-
-export type ChunkData = {
-  /**
-   * Index of the chunk (0-based)
-   *
-   * ```protobuf
-   * uint32 chunk_index = 1;
-   * ```
-   */
-  chunkIndex: number;
-  /**
-   * ```protobuf
-   * repeated CharacterData characters = 2;
-   * ```
-   */
-  characters: CharacterData[];
-};

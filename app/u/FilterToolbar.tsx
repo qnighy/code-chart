@@ -8,6 +8,7 @@ import {
   filterToSearchParams,
   type Filter,
 } from "./filter";
+import { type GeneralCategoryCore } from "../lib/ucd/character-data";
 import {
   CLOSE_PUNCTUATION,
   CONNECTOR_PUNCTUATION,
@@ -39,8 +40,7 @@ import {
   TITLECASE_LETTER,
   UNASSIGNED,
   UPPERCASE_LETTER,
-  type GeneralCategoryCore,
-} from "../lib/ucd/character-data";
+} from "../lib/ucd/proto/character_data_pb";
 
 export type FilterToolbarProps = {
   filter: Filter;

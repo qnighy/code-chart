@@ -6,6 +6,7 @@ import { UCD } from "./handle";
 import { WritableChunks } from "./writable-chunks";
 import { CHUNK_SIZE, chunkIndexOf } from "./chunk";
 import type { GeneralCategoryShorthand } from "./unicode-data";
+import { type GeneralCategoryCore } from "./character-data";
 import {
   CLOSE_PUNCTUATION,
   CONNECTOR_PUNCTUATION,
@@ -48,9 +49,8 @@ import {
   TITLECASE_LETTER,
   UNASSIGNED,
   UPPERCASE_LETTER,
-  type GeneralCategoryCore,
   type NameDerivation,
-} from "./character-data";
+} from "./proto/character_data_pb";
 
 const dirname = new URL(".", import.meta.url).pathname;
 

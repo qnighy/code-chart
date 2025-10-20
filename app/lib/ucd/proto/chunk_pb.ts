@@ -1,14 +1,34 @@
+// This file is manually transcribed from the protobuf definition.
+// When updating this file, please also update the corresponding
+// .proto file to reflect any changes to the protocol.
+
 import {
   fieldAsSubmessage,
   fieldAsUint32,
   ProtoReader,
-} from "../protobuf/reader";
-import { ProtoWriter } from "../protobuf/writer";
+} from "../../protobuf/reader";
+import { ProtoWriter } from "../../protobuf/writer";
 import {
   decodeCharacterData,
   encodeCharacterData,
-} from "./character-data-protobuf";
-import type { ChunkData } from "./chunk";
+  type CharacterData,
+} from "./character_data_pb";
+
+/**
+ * A chunk is a set of 256 consecutive Unicode code points.
+ */
+export type ChunkData = {
+  /**
+   * Index of the chunk (0-based)
+   */
+  chunkIndex: number;
+  /**
+   * The character data entries in this chunk,
+   * not necessarily containing all the 256 code points,
+   * in ascending order of code points.
+   */
+  characters: CharacterData[];
+};
 
 export function decodeChunkData(buf: Uint8Array): ChunkData {
   const data: ChunkData = {

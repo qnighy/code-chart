@@ -1,7 +1,7 @@
 import { publicFetch } from "@qnighy/internal-public-fetch";
 
-import { chunkNameOf, type ChunkData } from "./chunk.ts";
-import { decodeChunkData } from "./chunk-protobuf.ts";
+import { chunkNameOf } from "./chunk.ts";
+import { decodeChunkData, type ChunkData } from "./proto/chunk_pb.ts";
 
 /**
  * In the code chart, the Unicode Character Database (UCD) is reorganized and

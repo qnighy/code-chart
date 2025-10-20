@@ -1,0 +1,21 @@
+// This file is currently only for the reference of
+// the internal chunk data, and is not actually used
+// to generate any code.
+//
+// You need to manually update the corresponding
+// code to reflect any changes to the protocol.
+
+syntax = "proto3";
+
+import "character_data.proto";
+
+// A chunk is a set of 256 consecutive Unicode code points.
+message ChunkData {
+  // Index of the chunk (0-based)
+  uint32 chunk_index = 1;
+
+  // The character data entries in this chunk,
+  // not necessarily containing all the 256 code points,
+  // in ascending order of code points.
+  repeated CharacterData characters = 2;
+}

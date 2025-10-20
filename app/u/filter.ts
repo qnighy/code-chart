@@ -1,4 +1,5 @@
 import type { ReadonlyURLSearchParams } from "next/navigation";
+import { type GeneralCategoryCore } from "../lib/ucd/character-data";
 import {
   CLOSE_PUNCTUATION,
   CONNECTOR_PUNCTUATION,
@@ -30,8 +31,7 @@ import {
   TITLECASE_LETTER,
   UNASSIGNED,
   UPPERCASE_LETTER,
-  type GeneralCategoryCore,
-} from "../lib/ucd/character-data";
+} from "../lib/ucd/proto/character_data_pb";
 import type { DerivedData } from "../lib/ucd/derived-data";
 
 export type Filter = FilterTerm;
