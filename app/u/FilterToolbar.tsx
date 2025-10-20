@@ -1,18 +1,28 @@
 "use client";
 
-import { useCallback, useRef, useState, type ReactElement } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, X } from "lucide-react";
 import {
-  GENERAL_CATEGORIES,
+  addTraitToFilter,
   filterToSearchParams,
+  hasTrait,
+  removeTraitFromFilter,
   type Filter,
 } from "./filter";
 import {
+  GENERAL_CATEGORIES,
   GENERAL_CATEGORY_NAMES,
   GENERAL_CATEGORY_SHORTHANDS,
   type GeneralCategoryReq,
 } from "../lib/ucd/character-data";
+import { generalCategoryTrait } from "./trait";
 
 export type FilterToolbarProps = {
   filter: Filter;
@@ -25,54 +35,53 @@ export function FilterToolbar(props: FilterToolbarProps): ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleToggleCategory = useCallback(
-    (category: GeneralCategoryReq) => {
-      const currentCategories = new Set(filter.generalCategory);
-
-      if (currentCategories.has(category)) {
-        currentCategories.delete(category);
-      } else {
-        currentCategories.add(category);
-      }
-
-      const newFilter: Filter = {
-        ...filter,
-        generalCategory: Array.from(currentCategories),
-      };
-
-      // Update URL with new filter
+  const setFilter = useCallback(
+    (newFilter: Filter) => {
       const params = new URLSearchParams(searchParams);
       filterToSearchParams(newFilter, params);
-
-      // Preserve other params like 'cp' and 'current'
       router.push(`?${params.toString()}`, { scroll: false });
     },
-    [filter, searchParams, router],
+    [searchParams, router],
+  );
+
+  const handleToggleCategory = useCallback(
+    (category: GeneralCategoryReq, isChecked: boolean) => {
+      const trait = generalCategoryTrait(category);
+
+      if (isChecked) {
+        setFilter(addTraitToFilter(filter, trait));
+      } else {
+        setFilter(removeTraitFromFilter(filter, trait));
+      }
+    },
+    [filter, setFilter],
   );
 
   const handleClearAll = useCallback(() => {
-    const newFilter: Filter = {
-      ...filter,
-      generalCategory: [],
-    };
-
-    const params = new URLSearchParams(searchParams);
-    filterToSearchParams(newFilter, params);
-    router.push(`?${params.toString()}`, { scroll: false });
-  }, [filter, searchParams, router]);
+    let current: Filter = filter;
+    for (const category of GENERAL_CATEGORIES) {
+      current = removeTraitFromFilter(current, generalCategoryTrait(category));
+    }
+    setFilter(current);
+  }, [filter, setFilter]);
 
   const handleSelectAll = useCallback(() => {
-    const newFilter: Filter = {
-      ...filter,
-      generalCategory: [...GENERAL_CATEGORIES],
-    };
+    let current: Filter = filter;
+    for (const category of GENERAL_CATEGORIES) {
+      current = addTraitToFilter(current, generalCategoryTrait(category));
+    }
+    setFilter(current);
+  }, [filter, setFilter]);
 
-    const params = new URLSearchParams(searchParams);
-    filterToSearchParams(newFilter, params);
-    router.push(`?${params.toString()}`, { scroll: false });
-  }, [filter, searchParams, router]);
-
-  const selectedCount = filter.generalCategory.length;
+  const selectedCount = useMemo(() => {
+    let count = 0;
+    for (const category of GENERAL_CATEGORIES) {
+      if (hasTrait(filter, generalCategoryTrait(category))) {
+        count++;
+      }
+    }
+    return count;
+  }, [filter]);
   const buttonLabel =
     selectedCount === 0
       ? "All General Categories"
@@ -135,19 +144,24 @@ export function FilterToolbar(props: FilterToolbarProps): ReactElement {
 
                 {/* Scrollable list */}
                 <div className="overflow-y-auto flex-1">
-                  {GENERAL_CATEGORIES.map((category) => {
-                    const isChecked = filter.generalCategory.includes(category);
-                    const label = generalCategoryToLabel(category);
+                  {GENERAL_CATEGORIES.map((gc) => {
+                    const isChecked = hasTrait(
+                      filter,
+                      generalCategoryTrait(gc),
+                    );
+                    const label = generalCategoryToLabel(gc);
 
                     return (
                       <label
-                        key={category}
+                        key={gc}
                         className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                       >
                         <input
                           type="checkbox"
                           checked={isChecked}
-                          onChange={() => handleToggleCategory(category)}
+                          onChange={(e) =>
+                            handleToggleCategory(gc, e.currentTarget.checked)
+                          }
                           className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                         />
                         <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">

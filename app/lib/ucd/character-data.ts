@@ -127,6 +127,39 @@ export type GeneralCategoryReq =
   | typeof PRIVATE_USE
   | typeof UNASSIGNED;
 
+export const GENERAL_CATEGORIES: readonly GeneralCategoryReq[] = [
+  UPPERCASE_LETTER,
+  LOWERCASE_LETTER,
+  TITLECASE_LETTER,
+  MODIFIER_LETTER,
+  OTHER_LETTER,
+  NONSPACING_MARK,
+  SPACING_MARK,
+  ENCLOSING_MARK,
+  DECIMAL_NUMBER,
+  LETTER_NUMBER,
+  OTHER_NUMBER,
+  CONNECTOR_PUNCTUATION,
+  DASH_PUNCTUATION,
+  OPEN_PUNCTUATION,
+  CLOSE_PUNCTUATION,
+  INITIAL_PUNCTUATION,
+  FINAL_PUNCTUATION,
+  OTHER_PUNCTUATION,
+  MATH_SYMBOL,
+  CURRENCY_SYMBOL,
+  MODIFIER_SYMBOL,
+  OTHER_SYMBOL,
+  SPACE_SEPARATOR,
+  LINE_SEPARATOR,
+  PARAGRAPH_SEPARATOR,
+  CONTROL,
+  FORMAT,
+  SURROGATE,
+  PRIVATE_USE,
+  UNASSIGNED,
+];
+
 export const GENERAL_CATEGORY_NAMES: Record<GeneralCategoryReq, string> = {
   [UPPERCASE_LETTER]: "Uppercase_Letter",
   [LOWERCASE_LETTER]: "Lowercase_Letter",
@@ -162,10 +195,7 @@ export const GENERAL_CATEGORY_NAMES: Record<GeneralCategoryReq, string> = {
 
 const GENERAL_CATEGORY_FROM_NAME: Record<string, GeneralCategoryReq> =
   Object.fromEntries(
-    Object.entries(GENERAL_CATEGORY_NAMES).map(([key, value]) => [
-      value,
-      Number(key) as GeneralCategoryReq,
-    ]),
+    GENERAL_CATEGORIES.map((gc) => [GENERAL_CATEGORY_NAMES[gc], gc]),
   );
 
 export function generalCategoryFromName(
@@ -212,10 +242,7 @@ export const GENERAL_CATEGORY_SHORTHANDS: Record<GeneralCategoryReq, string> = {
 
 const GENERAL_CATEGORY_FROM_SHORTHAND: Record<string, GeneralCategoryReq> =
   Object.fromEntries(
-    Object.entries(GENERAL_CATEGORY_SHORTHANDS).map(([key, value]) => [
-      value,
-      Number(key) as GeneralCategoryReq,
-    ]),
+    GENERAL_CATEGORIES.map((gc) => [GENERAL_CATEGORY_SHORTHANDS[gc], gc]),
   );
 
 export function generalCategoryFromShorthand(
@@ -229,36 +256,7 @@ export function generalCategoryFromShorthand(
 
 const GENERAL_CATEGORIES_SET = new Set<GeneralCategoryOpt>([
   GENERAL_CATEGORY_UNSPECIFIED,
-  UPPERCASE_LETTER,
-  LOWERCASE_LETTER,
-  TITLECASE_LETTER,
-  MODIFIER_LETTER,
-  OTHER_LETTER,
-  NONSPACING_MARK,
-  SPACING_MARK,
-  ENCLOSING_MARK,
-  DECIMAL_NUMBER,
-  LETTER_NUMBER,
-  OTHER_NUMBER,
-  CONNECTOR_PUNCTUATION,
-  DASH_PUNCTUATION,
-  OPEN_PUNCTUATION,
-  CLOSE_PUNCTUATION,
-  INITIAL_PUNCTUATION,
-  FINAL_PUNCTUATION,
-  OTHER_PUNCTUATION,
-  MATH_SYMBOL,
-  CURRENCY_SYMBOL,
-  MODIFIER_SYMBOL,
-  OTHER_SYMBOL,
-  SPACE_SEPARATOR,
-  LINE_SEPARATOR,
-  PARAGRAPH_SEPARATOR,
-  CONTROL,
-  FORMAT,
-  SURROGATE,
-  PRIVATE_USE,
-  UNASSIGNED,
+  ...GENERAL_CATEGORIES,
 ]);
 
 export function isGeneralCategoryOpt(
