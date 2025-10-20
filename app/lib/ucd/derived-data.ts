@@ -1,5 +1,8 @@
 import { codePointHex, codePointHexName } from "../unicode";
-import { type GeneralCategoryCore } from "./character-data";
+import {
+  type GeneralCategoryReq,
+  type NameDerivationReq,
+} from "./character-data";
 import {
   NAME_DERIVATION_RESERVED,
   UNASSIGNED,
@@ -66,7 +69,7 @@ export type DerivedData = {
    * GeneralCategory general_category = 3;
    * ```
    */
-  generalCategory: GeneralCategoryCore;
+  generalCategory: GeneralCategoryReq;
 };
 
 export function deriveCharacterData(
@@ -87,10 +90,11 @@ export function deriveCharacterData(
     generalCategory = UNASSIGNED,
   } = baseData;
   const name = deriveName(codePoint, baseName, nameDerivation);
-  const derivedGeneralCategory: GeneralCategoryCore =
-    GENERAL_CATEGORY_CORES.has(generalCategory as GeneralCategoryCore)
-      ? (generalCategory as GeneralCategoryCore)
-      : UNASSIGNED;
+  const derivedGeneralCategory: GeneralCategoryReq = GENERAL_CATEGORY_CORES.has(
+    generalCategory as GeneralCategoryReq,
+  )
+    ? (generalCategory as GeneralCategoryReq)
+    : UNASSIGNED;
   return {
     codePoint,
     name,
@@ -98,7 +102,7 @@ export function deriveCharacterData(
   };
 }
 
-const GENERAL_CATEGORY_CORES: Set<GeneralCategoryCore> = new Set([
+const GENERAL_CATEGORY_CORES: Set<GeneralCategoryReq> = new Set([
   UPPERCASE_LETTER,
   LOWERCASE_LETTER,
   TITLECASE_LETTER,
@@ -131,7 +135,10 @@ const GENERAL_CATEGORY_CORES: Set<GeneralCategoryCore> = new Set([
   UNASSIGNED,
 ]);
 
-const nameTemplates: Record<NameDerivation, string> = {
+const nameTemplates: Record<
+  Exclude<NameDerivationReq, typeof NAME_DERIVATION_HANGUL_SYLLABLE>,
+  string
+> = {
   [NAME_DERIVATION_CONTROL]: "<control-$>",
   [NAME_DERIVATION_RESERVED]: "<reserved-$>",
   [NAME_DERIVATION_NONCHARACTER]: "<noncharacter-$>",
@@ -157,7 +164,13 @@ export function deriveName(
   } else if (nameDerivation === NAME_DERIVATION_HANGUL_SYLLABLE) {
     return deriveHangulSyllableName(codePoint);
   } else {
-    const template = nameTemplates[nameDerivation];
+    const template =
+      nameTemplates[
+        nameDerivation as Exclude<
+          NameDerivationReq,
+          typeof NAME_DERIVATION_HANGUL_SYLLABLE
+        >
+      ];
     if (!template) {
       throw new RangeError(`Invalid name derivation: ${nameDerivation}`);
     }

@@ -6,7 +6,7 @@ import { UCD } from "./handle";
 import { WritableChunks } from "./writable-chunks";
 import { CHUNK_SIZE, chunkIndexOf } from "./chunk";
 import type { GeneralCategoryShorthand } from "./unicode-data";
-import { type GeneralCategoryCore } from "./character-data";
+import { type GeneralCategoryReq } from "./character-data";
 import {
   CLOSE_PUNCTUATION,
   CONNECTOR_PUNCTUATION,
@@ -186,41 +186,39 @@ function inferNameDerivation(
   return NAME_DERIVATION_UNSPECIFIED;
 }
 
-const generalCategoryMap: Record<
-  GeneralCategoryShorthand,
-  GeneralCategoryCore
-> = {
-  Lu: UPPERCASE_LETTER,
-  Ll: LOWERCASE_LETTER,
-  Lt: TITLECASE_LETTER,
-  Lm: MODIFIER_LETTER,
-  Lo: OTHER_LETTER,
-  Mn: NONSPACING_MARK,
-  Mc: SPACING_MARK,
-  Me: ENCLOSING_MARK,
-  Nd: DECIMAL_NUMBER,
-  Nl: LETTER_NUMBER,
-  No: OTHER_NUMBER,
-  Pc: CONNECTOR_PUNCTUATION,
-  Pd: DASH_PUNCTUATION,
-  Ps: OPEN_PUNCTUATION,
-  Pe: CLOSE_PUNCTUATION,
-  Pi: INITIAL_PUNCTUATION,
-  Pf: FINAL_PUNCTUATION,
-  Po: OTHER_PUNCTUATION,
-  Sm: MATH_SYMBOL,
-  Sc: CURRENCY_SYMBOL,
-  Sk: MODIFIER_SYMBOL,
-  So: OTHER_SYMBOL,
-  Zs: SPACE_SEPARATOR,
-  Zl: LINE_SEPARATOR,
-  Zp: PARAGRAPH_SEPARATOR,
-  Cc: CONTROL,
-  Cf: FORMAT,
-  Cs: SURROGATE,
-  Co: PRIVATE_USE,
-  Cn: UNASSIGNED,
-};
+const generalCategoryMap: Record<GeneralCategoryShorthand, GeneralCategoryReq> =
+  {
+    Lu: UPPERCASE_LETTER,
+    Ll: LOWERCASE_LETTER,
+    Lt: TITLECASE_LETTER,
+    Lm: MODIFIER_LETTER,
+    Lo: OTHER_LETTER,
+    Mn: NONSPACING_MARK,
+    Mc: SPACING_MARK,
+    Me: ENCLOSING_MARK,
+    Nd: DECIMAL_NUMBER,
+    Nl: LETTER_NUMBER,
+    No: OTHER_NUMBER,
+    Pc: CONNECTOR_PUNCTUATION,
+    Pd: DASH_PUNCTUATION,
+    Ps: OPEN_PUNCTUATION,
+    Pe: CLOSE_PUNCTUATION,
+    Pi: INITIAL_PUNCTUATION,
+    Pf: FINAL_PUNCTUATION,
+    Po: OTHER_PUNCTUATION,
+    Sm: MATH_SYMBOL,
+    Sc: CURRENCY_SYMBOL,
+    Sk: MODIFIER_SYMBOL,
+    So: OTHER_SYMBOL,
+    Zs: SPACE_SEPARATOR,
+    Zl: LINE_SEPARATOR,
+    Zp: PARAGRAPH_SEPARATOR,
+    Cc: CONTROL,
+    Cf: FORMAT,
+    Cs: SURROGATE,
+    Co: PRIVATE_USE,
+    Cn: UNASSIGNED,
+  };
 
 if (import.meta.main) {
   await generateUCDChunks();

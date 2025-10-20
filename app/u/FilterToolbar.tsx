@@ -8,7 +8,7 @@ import {
   filterToSearchParams,
   type Filter,
 } from "./filter";
-import { type GeneralCategoryCore } from "../lib/ucd/character-data";
+import { type GeneralCategoryReq } from "../lib/ucd/character-data";
 import {
   CLOSE_PUNCTUATION,
   CONNECTOR_PUNCTUATION,
@@ -54,7 +54,7 @@ export function FilterToolbar(props: FilterToolbarProps): ReactElement {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleToggleCategory = useCallback(
-    (category: GeneralCategoryCore) => {
+    (category: GeneralCategoryReq) => {
       const currentCategories = new Set(filter.generalCategory);
 
       if (currentCategories.has(category)) {
@@ -207,7 +207,7 @@ export function FilterToolbar(props: FilterToolbarProps): ReactElement {
   );
 }
 
-const GC_TO_LABEL: Record<GeneralCategoryCore, string> = {
+const GC_TO_LABEL: Record<GeneralCategoryReq, string> = {
   [UPPERCASE_LETTER]: "Uppercase Letter (Lu)",
   [LOWERCASE_LETTER]: "Lowercase Letter (Ll)",
   [TITLECASE_LETTER]: "Titlecase Letter (Lt)",
@@ -240,6 +240,6 @@ const GC_TO_LABEL: Record<GeneralCategoryCore, string> = {
   [UNASSIGNED]: "Unassigned (Cn)",
 };
 
-function generalCategoryToLabel(gc: GeneralCategoryCore): string {
+function generalCategoryToLabel(gc: GeneralCategoryReq): string {
   return GC_TO_LABEL[gc];
 }

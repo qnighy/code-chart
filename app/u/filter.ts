@@ -1,5 +1,5 @@
 import type { ReadonlyURLSearchParams } from "next/navigation";
-import { type GeneralCategoryCore } from "../lib/ucd/character-data";
+import { type GeneralCategoryReq } from "../lib/ucd/character-data";
 import {
   CLOSE_PUNCTUATION,
   CONNECTOR_PUNCTUATION,
@@ -44,14 +44,14 @@ export type Filter = FilterTerm;
  * in terms of filtering, but they are distinct in the user interface.
  */
 export type FilterTerm = {
-  generalCategory: GeneralCategoryCore[];
+  generalCategory: GeneralCategoryReq[];
 };
 
 export const emptyFilter: Filter = {
   generalCategory: [],
 };
 
-export const GENERAL_CATEGORIES: readonly GeneralCategoryCore[] = [
+export const GENERAL_CATEGORIES: readonly GeneralCategoryReq[] = [
   UPPERCASE_LETTER,
   LOWERCASE_LETTER,
   TITLECASE_LETTER,
@@ -84,7 +84,7 @@ export const GENERAL_CATEGORIES: readonly GeneralCategoryCore[] = [
   UNASSIGNED,
 ];
 
-const GC_FROM_SHORTHAND: Record<string, GeneralCategoryCore> = {
+const GC_FROM_SHORTHAND: Record<string, GeneralCategoryReq> = {
   Lu: UPPERCASE_LETTER,
   Ll: LOWERCASE_LETTER,
   Lt: TITLECASE_LETTER,
@@ -117,14 +117,14 @@ const GC_FROM_SHORTHAND: Record<string, GeneralCategoryCore> = {
   Cn: UNASSIGNED,
 };
 
-const GC_TO_SHORTHAND: Record<GeneralCategoryCore, string> = Object.fromEntries(
+const GC_TO_SHORTHAND: Record<GeneralCategoryReq, string> = Object.fromEntries(
   Object.entries(GC_FROM_SHORTHAND).map(([k, v]) => [v, k]),
-) as Record<GeneralCategoryCore, string>;
+) as Record<GeneralCategoryReq, string>;
 
 export function normalizeGeneralCategories(
-  generalCategories: readonly GeneralCategoryCore[],
-): GeneralCategoryCore[] {
-  const set = new Set<GeneralCategoryCore>(generalCategories);
+  generalCategories: readonly GeneralCategoryReq[],
+): GeneralCategoryReq[] {
+  const set = new Set<GeneralCategoryReq>(generalCategories);
   return GENERAL_CATEGORIES.filter((gc) => set.has(gc));
 }
 
@@ -152,7 +152,7 @@ export function filterFromSearchParams(
   searchParams: URLSearchParams | ReadonlyURLSearchParams,
 ): Filter {
   const gcParam = searchParams.get("gc");
-  const generalCategory: GeneralCategoryCore[] = [];
+  const generalCategory: GeneralCategoryReq[] = [];
   if (gcParam != null && gcParam.length > 0) {
     for (const shorthand of gcParam.split(",")) {
       if (Object.hasOwn(GC_FROM_SHORTHAND, shorthand)) {
