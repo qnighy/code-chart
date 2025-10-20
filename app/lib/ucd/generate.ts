@@ -6,6 +6,22 @@ import { UCD } from "./handle";
 import { WritableChunks } from "./writable-chunks";
 import { CHUNK_SIZE, chunkIndexOf, getCharacterInChunkOrCreate } from "./chunk";
 import {
+  CLOSE_PUNCTUATION,
+  CONNECTOR_PUNCTUATION,
+  CONTROL,
+  CURRENCY_SYMBOL,
+  DASH_PUNCTUATION,
+  DECIMAL_NUMBER,
+  ENCLOSING_MARK,
+  FINAL_PUNCTUATION,
+  FORMAT,
+  INITIAL_PUNCTUATION,
+  LETTER_NUMBER,
+  LINE_SEPARATOR,
+  LOWERCASE_LETTER,
+  MATH_SYMBOL,
+  MODIFIER_LETTER,
+  MODIFIER_SYMBOL,
   NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH,
   NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
   NAME_DERIVATION_CONTROL,
@@ -18,9 +34,29 @@ import {
   NAME_DERIVATION_SURROGATE,
   NAME_DERIVATION_TANGUT_IDEOGRAPH,
   NAME_DERIVATION_UNSPECIFIED,
+  NONSPACING_MARK,
+  OPEN_PUNCTUATION,
+  OTHER_LETTER,
+  OTHER_NUMBER,
+  OTHER_PUNCTUATION,
+  OTHER_SYMBOL,
+  PARAGRAPH_SEPARATOR,
+  PRIVATE_USE,
+  SPACE_SEPARATOR,
+  SPACING_MARK,
+  SURROGATE,
+  TITLECASE_LETTER,
   UNASSIGNED,
+  UPPERCASE_LETTER,
+  type CharacterData,
   type NameDerivation,
 } from "./proto/character_data_pb";
+import {
+  decodeSkipInfo,
+  type ChunkData,
+  type SkipInfo,
+} from "./proto/chunk_pb";
+import type { GeneralCategoryReq } from "./character-data";
 
 const dirname = new URL(".", import.meta.url).pathname;
 
@@ -86,6 +122,46 @@ export async function generateUCDChunks() {
       chunk.dirty = true;
     } finally {
       chunk.dispose();
+    }
+  }
+
+  // Forward seeking for backwardSkips
+  {
+    let skipInfo: SkipInfo = decodeSkipInfo(new Uint8Array());
+    for (let chunkIndex = 0; chunkIndex < numChunks; chunkIndex++) {
+      const chunk = await chunks.openChunk(chunkIndex);
+      try {
+        chunk.data.backwardSkips = skipInfo;
+        chunk.dirty = true;
+
+        skipInfo = incrementedSkipInfo(skipInfo);
+        for (const charData of chunk.data.characters) {
+          updateSkipInfoForCharacter(skipInfo, charData);
+        }
+        updateSkipInfoForReserved(skipInfo, chunk.data);
+      } finally {
+        chunk.dispose();
+      }
+    }
+
+    // Backward seeking for forwardSkips
+    {
+      let skipInfo: SkipInfo = decodeSkipInfo(new Uint8Array());
+      for (let chunkIndex = numChunks - 1; chunkIndex >= 0; chunkIndex--) {
+        const chunk = await chunks.openChunk(chunkIndex);
+        try {
+          chunk.data.forwardSkips = skipInfo;
+          chunk.dirty = true;
+
+          skipInfo = incrementedSkipInfo(skipInfo);
+          for (const charData of chunk.data.characters) {
+            updateSkipInfoForCharacter(skipInfo, charData);
+          }
+          updateSkipInfoForReserved(skipInfo, chunk.data);
+        } finally {
+          chunk.dispose();
+        }
+      }
     }
   }
 
@@ -180,6 +256,99 @@ function inferNameDerivation(
   }
 
   return NAME_DERIVATION_UNSPECIFIED;
+}
+
+const skipKeys: Array<keyof SkipInfo> = [
+  "generalCategoryUppercaseLetter",
+  "generalCategoryLowercaseLetter",
+  "generalCategoryTitlecaseLetter",
+  "generalCategoryModifierLetter",
+  "generalCategoryOtherLetter",
+  "generalCategoryNonspacingMark",
+  "generalCategorySpacingMark",
+  "generalCategoryEnclosingMark",
+  "generalCategoryDecimalNumber",
+  "generalCategoryLetterNumber",
+  "generalCategoryOtherNumber",
+  "generalCategoryConnectorPunctuation",
+  "generalCategoryDashPunctuation",
+  "generalCategoryOpenPunctuation",
+  "generalCategoryClosePunctuation",
+  "generalCategoryInitialPunctuation",
+  "generalCategoryFinalPunctuation",
+  "generalCategoryOtherPunctuation",
+  "generalCategoryMathSymbol",
+  "generalCategoryCurrencySymbol",
+  "generalCategoryModifierSymbol",
+  "generalCategoryOtherSymbol",
+  "generalCategorySpaceSeparator",
+  "generalCategoryLineSeparator",
+  "generalCategoryParagraphSeparator",
+  "generalCategoryControl",
+  "generalCategoryFormat",
+  "generalCategoryPrivateUse",
+  "generalCategorySurrogate",
+  "generalCategoryUnassigned",
+];
+
+const gcSkipKeys: Record<GeneralCategoryReq, keyof SkipInfo> = {
+  [UPPERCASE_LETTER]: "generalCategoryUppercaseLetter",
+  [LOWERCASE_LETTER]: "generalCategoryLowercaseLetter",
+  [TITLECASE_LETTER]: "generalCategoryTitlecaseLetter",
+  [MODIFIER_LETTER]: "generalCategoryModifierLetter",
+  [OTHER_LETTER]: "generalCategoryOtherLetter",
+  [NONSPACING_MARK]: "generalCategoryNonspacingMark",
+  [SPACING_MARK]: "generalCategorySpacingMark",
+  [ENCLOSING_MARK]: "generalCategoryEnclosingMark",
+  [DECIMAL_NUMBER]: "generalCategoryDecimalNumber",
+  [LETTER_NUMBER]: "generalCategoryLetterNumber",
+  [OTHER_NUMBER]: "generalCategoryOtherNumber",
+  [CONNECTOR_PUNCTUATION]: "generalCategoryConnectorPunctuation",
+  [DASH_PUNCTUATION]: "generalCategoryDashPunctuation",
+  [OPEN_PUNCTUATION]: "generalCategoryOpenPunctuation",
+  [CLOSE_PUNCTUATION]: "generalCategoryClosePunctuation",
+  [INITIAL_PUNCTUATION]: "generalCategoryInitialPunctuation",
+  [FINAL_PUNCTUATION]: "generalCategoryFinalPunctuation",
+  [OTHER_PUNCTUATION]: "generalCategoryOtherPunctuation",
+  [MATH_SYMBOL]: "generalCategoryMathSymbol",
+  [CURRENCY_SYMBOL]: "generalCategoryCurrencySymbol",
+  [MODIFIER_SYMBOL]: "generalCategoryModifierSymbol",
+  [OTHER_SYMBOL]: "generalCategoryOtherSymbol",
+  [SPACE_SEPARATOR]: "generalCategorySpaceSeparator",
+  [LINE_SEPARATOR]: "generalCategoryLineSeparator",
+  [PARAGRAPH_SEPARATOR]: "generalCategoryParagraphSeparator",
+  [CONTROL]: "generalCategoryControl",
+  [FORMAT]: "generalCategoryFormat",
+  [PRIVATE_USE]: "generalCategoryPrivateUse",
+  [SURROGATE]: "generalCategorySurrogate",
+  [UNASSIGNED]: "generalCategoryUnassigned",
+} as const;
+
+function incrementedSkipInfo(skipInfo: SkipInfo): SkipInfo {
+  const newSkipInfo: SkipInfo = { ...skipInfo };
+  for (const key of skipKeys) {
+    newSkipInfo[key] += 1;
+  }
+  return newSkipInfo;
+}
+
+function updateSkipInfoForCharacter(
+  skipInfo: SkipInfo,
+  characterData: CharacterData,
+): void {
+  const gcKey = gcSkipKeys[characterData.generalCategory as GeneralCategoryReq];
+  skipInfo[gcKey] = 0;
+}
+
+function updateSkipInfoForReserved(
+  skipInfo: SkipInfo,
+  chunkData: ChunkData,
+): void {
+  if (chunkData.characters.length === CHUNK_SIZE) {
+    // No reserved code points in this chunk
+    return;
+  }
+  skipInfo.generalCategoryUnassigned = 0;
 }
 
 if (import.meta.main) {

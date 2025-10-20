@@ -38,7 +38,9 @@ export class Chunks {
         `Failed to fetch chunk ${chunkIndex}: ${resp.status} ${resp.statusText}`,
       );
     }
-    return decodeChunkData(await resp.bytes());
+    const decoded = decodeChunkData(await resp.bytes());
+    // console.log("chunk data =", decoded);
+    return decoded;
   }
 
   #evictChunks() {

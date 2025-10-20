@@ -18,4 +18,50 @@ message ChunkData {
   // not necessarily containing all the 256 code points,
   // in ascending order of code points.
   repeated CharacterData characters = 2;
+
+  // Describes absense of characters of certain property values
+  // in a contiguous range of code points before this chunk.
+  SkipInfo backward_skips = 3;
+
+  // Describes absense of characters of certain property values
+  // in a contiguous range of code points after this chunk.
+  SkipInfo forward_skips = 4;
+}
+
+// Describes absense of characters of certain property values
+// in a contiguous range of code points before or after a chunk.
+//
+// The number represents the number of consecutive chunks (256 code points each)
+// that can be safely skipped when searching.
+message SkipInfo {
+  uint32 general_category_uppercase_letter = 1;
+  uint32 general_category_lowercase_letter = 2;
+  uint32 general_category_titlecase_letter = 3;
+  uint32 general_category_modifier_letter = 4;
+  uint32 general_category_other_letter = 5;
+  uint32 general_category_nonspacing_mark = 6;
+  uint32 general_category_spacing_mark = 7;
+  uint32 general_category_enclosing_mark = 8;
+  uint32 general_category_decimal_number = 9;
+  uint32 general_category_letter_number = 10;
+  uint32 general_category_other_number = 11;
+  uint32 general_category_connector_punctuation = 12;
+  uint32 general_category_dash_punctuation = 13;
+  uint32 general_category_open_punctuation = 14;
+  uint32 general_category_close_punctuation = 15;
+  uint32 general_category_initial_punctuation = 16;
+  uint32 general_category_final_punctuation = 17;
+  uint32 general_category_other_punctuation = 18;
+  uint32 general_category_math_symbol = 19;
+  uint32 general_category_currency_symbol = 20;
+  uint32 general_category_modifier_symbol = 21;
+  uint32 general_category_other_symbol = 22;
+  uint32 general_category_space_separator = 23;
+  uint32 general_category_line_separator = 24;
+  uint32 general_category_paragraph_separator = 25;
+  uint32 general_category_control = 26;
+  uint32 general_category_format = 27;
+  uint32 general_category_private_use = 28;
+  uint32 general_category_surrogate = 29;
+  uint32 general_category_unassigned = 30;
 }
