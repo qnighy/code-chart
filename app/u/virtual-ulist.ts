@@ -151,6 +151,7 @@ function delimitDiscretesBackward(
       flush(i);
     }
   }
+  flush(i, true);
   return rowsReversed.toReversed();
 }
 

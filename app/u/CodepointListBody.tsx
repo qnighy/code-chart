@@ -121,11 +121,10 @@ export function CodepointListBody(
         }
         newCps.push(cp);
       }
-      const newFrontier =
-        chunkStart -
-        (trivial
-          ? 0
-          : CHUNK_SIZE * evaluateFilterSkip(filter, chunk!.backwardSkips));
+      const skipChunks = trivial
+        ? 0
+        : evaluateFilterSkip(filter, chunk!.backwardSkips);
+      const newFrontier = Math.max(chunkStart - CHUNK_SIZE * skipChunks, 0);
       backwardExpand(newCps, [newFrontier, frontier]);
     },
     onError: (error: unknown) => {
@@ -166,11 +165,13 @@ export function CodepointListBody(
         }
         newCps.push(cp);
       }
-      const newFrontier =
-        chunkEnd +
-        (trivial
-          ? 0
-          : CHUNK_SIZE * evaluateFilterSkip(filter, chunk!.forwardSkips));
+      const skipChunks = trivial
+        ? 0
+        : evaluateFilterSkip(filter, chunk!.forwardSkips);
+      const newFrontier = Math.min(
+        chunkEnd + CHUNK_SIZE * skipChunks,
+        0x110000,
+      );
       forwardExpand(newCps, [frontier, newFrontier]);
     },
     onError: (error: unknown) => {
