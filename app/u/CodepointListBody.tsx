@@ -22,10 +22,15 @@ import { layoutVirtualUList } from "./virtual-ulist";
 import { useVirtualUListDispatch } from "./useVirtualUListDispatch";
 import { codePointHex } from "../lib/unicode";
 import { useAsyncLoad } from "./useAsyncLoad";
-import { chunkIndexOf, chunkRangeOf } from "../lib/ucd/chunk";
+import { CHUNK_SIZE, chunkIndexOf, chunkRangeOf } from "../lib/ucd/chunk";
 import { chunks } from "../shared";
 import { deriveCharacterData } from "../lib/ucd/derived-data";
-import { evaluateFilter, isTrivialFilter, type Filter } from "./filter";
+import {
+  evaluateFilter,
+  evaluateFilterSkip,
+  isTrivialFilter,
+  type Filter,
+} from "./filter";
 
 const MIN_KEEPED_LINES = 128;
 const EXTRA_KEEPED_LINES = 10;
@@ -116,7 +121,12 @@ export function CodepointListBody(
         }
         newCps.push(cp);
       }
-      backwardExpand(newCps, [chunkStart, frontier]);
+      const newFrontier =
+        chunkStart -
+        (trivial
+          ? 0
+          : CHUNK_SIZE * evaluateFilterSkip(filter, chunk!.backwardSkips));
+      backwardExpand(newCps, [newFrontier, frontier]);
     },
     onError: (error: unknown) => {
       console.error(error);
@@ -156,7 +166,12 @@ export function CodepointListBody(
         }
         newCps.push(cp);
       }
-      forwardExpand(newCps, [frontier, chunkEnd]);
+      const newFrontier =
+        chunkEnd +
+        (trivial
+          ? 0
+          : CHUNK_SIZE * evaluateFilterSkip(filter, chunk!.forwardSkips));
+      forwardExpand(newCps, [frontier, newFrontier]);
     },
     onError: (error: unknown) => {
       console.error(error);
