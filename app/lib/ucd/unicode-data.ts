@@ -1,5 +1,5 @@
 import {
-  generalCategoryFromShorthand,
+  GENERAL_CATEGORY_FROM_SHORTHAND,
   type GeneralCategoryReq,
 } from "./character-data";
 
@@ -77,7 +77,7 @@ export function parseUnicodeDataLine(line: string): UnicodeDataRow {
   const name = fields[1]!;
 
   const generalCategoryShorthand = fields[2]!;
-  const generalCategory = generalCategoryFromShorthand(
+  const generalCategory = GENERAL_CATEGORY_FROM_SHORTHAND.get(
     generalCategoryShorthand,
   );
   if (!generalCategory) {

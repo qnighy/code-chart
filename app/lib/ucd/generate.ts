@@ -57,6 +57,7 @@ import {
   type SkipInfo,
 } from "./proto/chunk_pb";
 import type { GeneralCategoryReq } from "./character-data";
+import { FullMap } from "../utils/full-map";
 
 const dirname = new URL(".", import.meta.url).pathname;
 
@@ -181,67 +182,76 @@ function* nonCharacters(): IterableIterator<number> {
   }
 }
 
-const NameDerivationLabelMap: Record<string, NameDerivation> = {
+const NameDerivationLabelMap: ReadonlyMap<string, NameDerivation> = new Map<
+  string,
+  NameDerivation
+>([
   // 0000..001F, 007F..009F
-  "<control>": NAME_DERIVATION_CONTROL,
+  ["<control>", NAME_DERIVATION_CONTROL],
   // 3400..4DBF
-  "<CJK Ideograph Extension A>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension A>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // 4E00..9FFF
-  "<CJK Ideograph>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // AC00..D7A3
-  "<Hangul Syllable>": NAME_DERIVATION_HANGUL_SYLLABLE,
+  ["<Hangul Syllable>", NAME_DERIVATION_HANGUL_SYLLABLE],
   // D800..DB7F
-  "<Non Private Use High Surrogate>": NAME_DERIVATION_SURROGATE,
+  ["<Non Private Use High Surrogate>", NAME_DERIVATION_SURROGATE],
   // DB80..DBFF
-  "<Private Use High Surrogate>": NAME_DERIVATION_SURROGATE,
+  ["<Private Use High Surrogate>", NAME_DERIVATION_SURROGATE],
   // DC00..DFFF
-  "<Low Surrogate>": NAME_DERIVATION_SURROGATE,
+  ["<Low Surrogate>", NAME_DERIVATION_SURROGATE],
   // E000..F8FF
-  "<Private Use>": NAME_DERIVATION_PRIVATE_USE,
+  ["<Private Use>", NAME_DERIVATION_PRIVATE_USE],
   // 17000..187FF
-  "<Tangut Ideograph>": NAME_DERIVATION_TANGUT_IDEOGRAPH,
+  ["<Tangut Ideograph>", NAME_DERIVATION_TANGUT_IDEOGRAPH],
   // 18D00..18D1E
-  "<Tangut Ideograph Supplement>": NAME_DERIVATION_TANGUT_IDEOGRAPH,
+  ["<Tangut Ideograph Supplement>", NAME_DERIVATION_TANGUT_IDEOGRAPH],
   // 20000..2A6DF
-  "<CJK Ideograph Extension B>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension B>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // 2A700..2B73F
-  "<CJK Ideograph Extension C>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension C>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // 2B740..2B81D
-  "<CJK Ideograph Extension D>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension D>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // 2B820..2CEAD
-  "<CJK Ideograph Extension E>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension E>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // 2CEB0..2EBE0
-  "<CJK Ideograph Extension F>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension F>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // 2EBF0..2EE5D
-  "<CJK Ideograph Extension I>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension I>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // 30000..3134A
-  "<CJK Ideograph Extension G>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension G>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // 31350..323AF
-  "<CJK Ideograph Extension H>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension H>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // 323B0..33479
-  "<CJK Ideograph Extension J>": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
+  ["<CJK Ideograph Extension J>", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
   // F0000..FFFFD
-  "<Plane 15 Private Use>": NAME_DERIVATION_PRIVATE_USE,
+  ["<Plane 15 Private Use>", NAME_DERIVATION_PRIVATE_USE],
   // 100000..10FFFD
-  "<Plane 16 Private Use>": NAME_DERIVATION_PRIVATE_USE,
-};
+  ["<Plane 16 Private Use>", NAME_DERIVATION_PRIVATE_USE],
+]);
 
-const IdeographBaseNameMap: Record<string, NameDerivation> = {
-  "CJK UNIFIED IDEOGRAPH": NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH,
-  "CJK COMPATIBILITY IDEOGRAPH": NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH,
-  "EGYPTIAN HIEROGLYPH": NAME_DERIVATION_EGYPTIAN_HIEROGLYPH,
-  "TANGUT IDEOGRAPH": NAME_DERIVATION_TANGUT_IDEOGRAPH,
-  "KHITAN SMALL SCRIPT CHARACTER":
+const IdeographBaseNameMap: ReadonlyMap<string, NameDerivation> = new Map<
+  string,
+  NameDerivation
+>([
+  ["CJK UNIFIED IDEOGRAPH", NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH],
+  ["CJK COMPATIBILITY IDEOGRAPH", NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH],
+  ["EGYPTIAN HIEROGLYPH", NAME_DERIVATION_EGYPTIAN_HIEROGLYPH],
+  ["TANGUT IDEOGRAPH", NAME_DERIVATION_TANGUT_IDEOGRAPH],
+  [
+    "KHITAN SMALL SCRIPT CHARACTER",
     NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER,
-  "NUSHU CHARACTER": NAME_DERIVATION_NUSHU_CHARACTER,
-};
+  ],
+  ["NUSHU CHARACTER", NAME_DERIVATION_NUSHU_CHARACTER],
+]);
 
 function inferNameDerivation(
   codePoint: number,
   declaredName: string,
 ): NameDerivation {
-  if (Object.hasOwn(NameDerivationLabelMap, declaredName)) {
-    return NameDerivationLabelMap[declaredName];
+  const found = NameDerivationLabelMap.get(declaredName);
+  if (found) {
+    return found;
   }
   if (declaredName.startsWith("<")) {
     throw new SyntaxError(`Unrecognized special name: ${declaredName}`);
@@ -250,8 +260,9 @@ function inferNameDerivation(
   const cpSuffix = `-${codePointHex(codePoint)}`;
   if (declaredName.endsWith(cpSuffix)) {
     const baseName = declaredName.slice(0, -cpSuffix.length);
-    if (Object.hasOwn(IdeographBaseNameMap, baseName)) {
-      return IdeographBaseNameMap[baseName];
+    const found = IdeographBaseNameMap.get(baseName);
+    if (found) {
+      return found;
     }
   }
 
@@ -291,38 +302,38 @@ const skipKeys: Array<keyof SkipInfo> = [
   "generalCategoryUnassigned",
 ];
 
-const gcSkipKeys: Record<GeneralCategoryReq, keyof SkipInfo> = {
-  [UPPERCASE_LETTER]: "generalCategoryUppercaseLetter",
-  [LOWERCASE_LETTER]: "generalCategoryLowercaseLetter",
-  [TITLECASE_LETTER]: "generalCategoryTitlecaseLetter",
-  [MODIFIER_LETTER]: "generalCategoryModifierLetter",
-  [OTHER_LETTER]: "generalCategoryOtherLetter",
-  [NONSPACING_MARK]: "generalCategoryNonspacingMark",
-  [SPACING_MARK]: "generalCategorySpacingMark",
-  [ENCLOSING_MARK]: "generalCategoryEnclosingMark",
-  [DECIMAL_NUMBER]: "generalCategoryDecimalNumber",
-  [LETTER_NUMBER]: "generalCategoryLetterNumber",
-  [OTHER_NUMBER]: "generalCategoryOtherNumber",
-  [CONNECTOR_PUNCTUATION]: "generalCategoryConnectorPunctuation",
-  [DASH_PUNCTUATION]: "generalCategoryDashPunctuation",
-  [OPEN_PUNCTUATION]: "generalCategoryOpenPunctuation",
-  [CLOSE_PUNCTUATION]: "generalCategoryClosePunctuation",
-  [INITIAL_PUNCTUATION]: "generalCategoryInitialPunctuation",
-  [FINAL_PUNCTUATION]: "generalCategoryFinalPunctuation",
-  [OTHER_PUNCTUATION]: "generalCategoryOtherPunctuation",
-  [MATH_SYMBOL]: "generalCategoryMathSymbol",
-  [CURRENCY_SYMBOL]: "generalCategoryCurrencySymbol",
-  [MODIFIER_SYMBOL]: "generalCategoryModifierSymbol",
-  [OTHER_SYMBOL]: "generalCategoryOtherSymbol",
-  [SPACE_SEPARATOR]: "generalCategorySpaceSeparator",
-  [LINE_SEPARATOR]: "generalCategoryLineSeparator",
-  [PARAGRAPH_SEPARATOR]: "generalCategoryParagraphSeparator",
-  [CONTROL]: "generalCategoryControl",
-  [FORMAT]: "generalCategoryFormat",
-  [PRIVATE_USE]: "generalCategoryPrivateUse",
-  [SURROGATE]: "generalCategorySurrogate",
-  [UNASSIGNED]: "generalCategoryUnassigned",
-} as const;
+const gcSkipKeys: FullMap<GeneralCategoryReq, keyof SkipInfo> = new FullMap([
+  [UPPERCASE_LETTER, "generalCategoryUppercaseLetter"],
+  [LOWERCASE_LETTER, "generalCategoryLowercaseLetter"],
+  [TITLECASE_LETTER, "generalCategoryTitlecaseLetter"],
+  [MODIFIER_LETTER, "generalCategoryModifierLetter"],
+  [OTHER_LETTER, "generalCategoryOtherLetter"],
+  [NONSPACING_MARK, "generalCategoryNonspacingMark"],
+  [SPACING_MARK, "generalCategorySpacingMark"],
+  [ENCLOSING_MARK, "generalCategoryEnclosingMark"],
+  [DECIMAL_NUMBER, "generalCategoryDecimalNumber"],
+  [LETTER_NUMBER, "generalCategoryLetterNumber"],
+  [OTHER_NUMBER, "generalCategoryOtherNumber"],
+  [CONNECTOR_PUNCTUATION, "generalCategoryConnectorPunctuation"],
+  [DASH_PUNCTUATION, "generalCategoryDashPunctuation"],
+  [OPEN_PUNCTUATION, "generalCategoryOpenPunctuation"],
+  [CLOSE_PUNCTUATION, "generalCategoryClosePunctuation"],
+  [INITIAL_PUNCTUATION, "generalCategoryInitialPunctuation"],
+  [FINAL_PUNCTUATION, "generalCategoryFinalPunctuation"],
+  [OTHER_PUNCTUATION, "generalCategoryOtherPunctuation"],
+  [MATH_SYMBOL, "generalCategoryMathSymbol"],
+  [CURRENCY_SYMBOL, "generalCategoryCurrencySymbol"],
+  [MODIFIER_SYMBOL, "generalCategoryModifierSymbol"],
+  [OTHER_SYMBOL, "generalCategoryOtherSymbol"],
+  [SPACE_SEPARATOR, "generalCategorySpaceSeparator"],
+  [LINE_SEPARATOR, "generalCategoryLineSeparator"],
+  [PARAGRAPH_SEPARATOR, "generalCategoryParagraphSeparator"],
+  [CONTROL, "generalCategoryControl"],
+  [FORMAT, "generalCategoryFormat"],
+  [PRIVATE_USE, "generalCategoryPrivateUse"],
+  [SURROGATE, "generalCategorySurrogate"],
+  [UNASSIGNED, "generalCategoryUnassigned"],
+]);
 
 function incrementedSkipInfo(skipInfo: SkipInfo): SkipInfo {
   const newSkipInfo: SkipInfo = { ...skipInfo };
@@ -336,7 +347,9 @@ function updateSkipInfoForCharacter(
   skipInfo: SkipInfo,
   characterData: CharacterData,
 ): void {
-  const gcKey = gcSkipKeys[characterData.generalCategory as GeneralCategoryReq];
+  const gcKey = gcSkipKeys.get(
+    characterData.generalCategory as GeneralCategoryReq,
+  );
   skipInfo[gcKey] = 0;
 }
 

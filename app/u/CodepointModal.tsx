@@ -113,7 +113,7 @@ function CodepointModalContent({
               General Category:
             </dt>
             <dd className="font-mono text-gray-900 dark:text-gray-100">
-              {GENERAL_CATEGORY_NAMES[charData.generalCategory]}
+              {GENERAL_CATEGORY_NAMES.get(charData.generalCategory)}
             </dd>
 
             <dt className="font-medium text-gray-700 dark:text-gray-300">

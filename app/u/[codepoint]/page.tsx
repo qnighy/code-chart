@@ -185,7 +185,7 @@ export default async function CodepointPage({
               {/* General Category */}
               <dt className="font-medium">General Category:</dt>
               <dd className="font-mono">
-                {GENERAL_CATEGORY_NAMES[charData.generalCategory]}
+                {GENERAL_CATEGORY_NAMES.get(charData.generalCategory)}
               </dd>
 
               <dt className="font-medium">Decimal:</dt>

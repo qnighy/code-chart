@@ -38,6 +38,7 @@ import {
   UNASSIGNED,
   UPPERCASE_LETTER,
 } from "../lib/ucd/proto/character_data_pb";
+import { FullMap } from "../lib/utils/full-map";
 
 export type Filter = FilterTerm;
 
@@ -92,7 +93,7 @@ export function filterToSearchParams(
   const gcShorthands: string[] = [];
   for (const [gc, trait] of GC_TRAIT_ENTRIES) {
     if (hasBit(filter, trait)) {
-      gcShorthands.push(GENERAL_CATEGORY_SHORTHANDS[gc]);
+      gcShorthands.push(GENERAL_CATEGORY_SHORTHANDS.get(gc));
     }
   }
   if (gcShorthands.length > 0) {
@@ -116,7 +117,7 @@ export function filterFromSearchParams(
   const gcParam = searchParams.get("gc");
   const gcShorthands = new Set((gcParam ?? "").split(","));
   for (const [gc, trait] of GC_TRAIT_ENTRIES) {
-    if (gcShorthands.has(GENERAL_CATEGORY_SHORTHANDS[gc])) {
+    if (gcShorthands.has(GENERAL_CATEGORY_SHORTHANDS.get(gc))) {
       filter |= mask1At(trait);
     }
   }
@@ -152,45 +153,47 @@ export function evaluateFilterSkip(
   let gcSkip = LARGE_SKIP;
   for (const [gc, trait] of GC_TRAIT_ENTRIES) {
     if (hasBit(n, trait)) {
-      const key = gcSkipInfoKeys[gc];
+      const key = gcSkipInfoKeys.get(gc);
       gcSkip = Math.min(gcSkip, skipInfo[key]);
     }
   }
   return gcSkip;
 }
 
-const gcSkipInfoKeys: Record<GeneralCategoryReq, keyof SkipInfo> = {
-  [UPPERCASE_LETTER]: "generalCategoryUppercaseLetter",
-  [LOWERCASE_LETTER]: "generalCategoryLowercaseLetter",
-  [TITLECASE_LETTER]: "generalCategoryTitlecaseLetter",
-  [MODIFIER_LETTER]: "generalCategoryModifierLetter",
-  [OTHER_LETTER]: "generalCategoryOtherLetter",
-  [NONSPACING_MARK]: "generalCategoryNonspacingMark",
-  [SPACING_MARK]: "generalCategorySpacingMark",
-  [ENCLOSING_MARK]: "generalCategoryEnclosingMark",
-  [DECIMAL_NUMBER]: "generalCategoryDecimalNumber",
-  [LETTER_NUMBER]: "generalCategoryLetterNumber",
-  [OTHER_NUMBER]: "generalCategoryOtherNumber",
-  [CONNECTOR_PUNCTUATION]: "generalCategoryConnectorPunctuation",
-  [DASH_PUNCTUATION]: "generalCategoryDashPunctuation",
-  [OPEN_PUNCTUATION]: "generalCategoryOpenPunctuation",
-  [CLOSE_PUNCTUATION]: "generalCategoryClosePunctuation",
-  [INITIAL_PUNCTUATION]: "generalCategoryInitialPunctuation",
-  [FINAL_PUNCTUATION]: "generalCategoryFinalPunctuation",
-  [OTHER_PUNCTUATION]: "generalCategoryOtherPunctuation",
-  [MATH_SYMBOL]: "generalCategoryMathSymbol",
-  [CURRENCY_SYMBOL]: "generalCategoryCurrencySymbol",
-  [MODIFIER_SYMBOL]: "generalCategoryModifierSymbol",
-  [OTHER_SYMBOL]: "generalCategoryOtherSymbol",
-  [SPACE_SEPARATOR]: "generalCategorySpaceSeparator",
-  [LINE_SEPARATOR]: "generalCategoryLineSeparator",
-  [PARAGRAPH_SEPARATOR]: "generalCategoryParagraphSeparator",
-  [CONTROL]: "generalCategoryControl",
-  [FORMAT]: "generalCategoryFormat",
-  [SURROGATE]: "generalCategorySurrogate",
-  [PRIVATE_USE]: "generalCategoryPrivateUse",
-  [UNASSIGNED]: "generalCategoryUnassigned",
-};
+const gcSkipInfoKeys: FullMap<GeneralCategoryReq, keyof SkipInfo> = new FullMap(
+  [
+    [UPPERCASE_LETTER, "generalCategoryUppercaseLetter"],
+    [LOWERCASE_LETTER, "generalCategoryLowercaseLetter"],
+    [TITLECASE_LETTER, "generalCategoryTitlecaseLetter"],
+    [MODIFIER_LETTER, "generalCategoryModifierLetter"],
+    [OTHER_LETTER, "generalCategoryOtherLetter"],
+    [NONSPACING_MARK, "generalCategoryNonspacingMark"],
+    [SPACING_MARK, "generalCategorySpacingMark"],
+    [ENCLOSING_MARK, "generalCategoryEnclosingMark"],
+    [DECIMAL_NUMBER, "generalCategoryDecimalNumber"],
+    [LETTER_NUMBER, "generalCategoryLetterNumber"],
+    [OTHER_NUMBER, "generalCategoryOtherNumber"],
+    [CONNECTOR_PUNCTUATION, "generalCategoryConnectorPunctuation"],
+    [DASH_PUNCTUATION, "generalCategoryDashPunctuation"],
+    [OPEN_PUNCTUATION, "generalCategoryOpenPunctuation"],
+    [CLOSE_PUNCTUATION, "generalCategoryClosePunctuation"],
+    [INITIAL_PUNCTUATION, "generalCategoryInitialPunctuation"],
+    [FINAL_PUNCTUATION, "generalCategoryFinalPunctuation"],
+    [OTHER_PUNCTUATION, "generalCategoryOtherPunctuation"],
+    [MATH_SYMBOL, "generalCategoryMathSymbol"],
+    [CURRENCY_SYMBOL, "generalCategoryCurrencySymbol"],
+    [MODIFIER_SYMBOL, "generalCategoryModifierSymbol"],
+    [OTHER_SYMBOL, "generalCategoryOtherSymbol"],
+    [SPACE_SEPARATOR, "generalCategorySpaceSeparator"],
+    [LINE_SEPARATOR, "generalCategoryLineSeparator"],
+    [PARAGRAPH_SEPARATOR, "generalCategoryParagraphSeparator"],
+    [CONTROL, "generalCategoryControl"],
+    [FORMAT, "generalCategoryFormat"],
+    [SURROGATE, "generalCategorySurrogate"],
+    [PRIVATE_USE, "generalCategoryPrivateUse"],
+    [UNASSIGNED, "generalCategoryUnassigned"],
+  ],
+);
 
 export function hasTrait(filter: Filter, trait: Trait): boolean {
   return hasBit(filter, trait);

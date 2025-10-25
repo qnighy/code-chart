@@ -194,5 +194,5 @@ export function FilterToolbar(props: FilterToolbarProps): ReactElement {
 }
 
 function generalCategoryToLabel(gc: GeneralCategoryReq): string {
-  return `${GENERAL_CATEGORY_NAMES[gc]} (${GENERAL_CATEGORY_SHORTHANDS[gc]})`;
+  return `${GENERAL_CATEGORY_NAMES.get(gc)} (${GENERAL_CATEGORY_SHORTHANDS.get(gc)})`;
 }

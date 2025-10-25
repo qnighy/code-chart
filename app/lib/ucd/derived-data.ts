@@ -1,4 +1,5 @@
 import { codePointHex, codePointHexName } from "../unicode";
+import { FullMap } from "../utils/full-map";
 import {
   isGeneralCategoryReq,
   type GeneralCategoryReq,
@@ -74,24 +75,28 @@ export function deriveCharacterData(
   };
 }
 
-const nameTemplates: Record<
+const nameTemplates: FullMap<
   Exclude<NameDerivationReq, typeof NAME_DERIVATION_HANGUL_SYLLABLE>,
   string
-> = {
-  [NAME_DERIVATION_CONTROL]: "<control-$>",
-  [NAME_DERIVATION_RESERVED]: "<reserved-$>",
-  [NAME_DERIVATION_NONCHARACTER]: "<noncharacter-$>",
-  [NAME_DERIVATION_PRIVATE_USE]: "<private-use-$>",
-  [NAME_DERIVATION_SURROGATE]: "<surrogate-$>",
-  [NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH]: "CJK UNIFIED IDEOGRAPH-$",
-  [NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH]:
+> = new FullMap([
+  [NAME_DERIVATION_CONTROL, "<control-$>"],
+  [NAME_DERIVATION_RESERVED, "<reserved-$>"],
+  [NAME_DERIVATION_NONCHARACTER, "<noncharacter-$>"],
+  [NAME_DERIVATION_PRIVATE_USE, "<private-use-$>"],
+  [NAME_DERIVATION_SURROGATE, "<surrogate-$>"],
+  [NAME_DERIVATION_CJK_UNIFIED_IDEOGRAPH, "CJK UNIFIED IDEOGRAPH-$"],
+  [
+    NAME_DERIVATION_CJK_COMPATIBILITY_IDEOGRAPH,
     "CJK COMPATIBILITY IDEOGRAPH-$",
-  [NAME_DERIVATION_EGYPTIAN_HIEROGLYPH]: "EGYPTIAN HIEROGLYPH-$",
-  [NAME_DERIVATION_TANGUT_IDEOGRAPH]: "TANGUT IDEOGRAPH-$",
-  [NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER]:
+  ],
+  [NAME_DERIVATION_EGYPTIAN_HIEROGLYPH, "EGYPTIAN HIEROGLYPH-$"],
+  [NAME_DERIVATION_TANGUT_IDEOGRAPH, "TANGUT IDEOGRAPH-$"],
+  [
+    NAME_DERIVATION_KHITAN_SMALL_SCRIPT_CHARACTER,
     "KHITAN SMALL SCRIPT CHARACTER-$",
-  [NAME_DERIVATION_NUSHU_CHARACTER]: "NUSHU CHARACTER-$",
-};
+  ],
+  [NAME_DERIVATION_NUSHU_CHARACTER, "NUSHU CHARACTER-$"],
+]);
 
 export function deriveName(
   codePoint: number,
@@ -103,13 +108,12 @@ export function deriveName(
   } else if (nameDerivation === NAME_DERIVATION_HANGUL_SYLLABLE) {
     return deriveHangulSyllableName(codePoint);
   } else {
-    const template =
-      nameTemplates[
-        nameDerivation as Exclude<
-          NameDerivationReq,
-          typeof NAME_DERIVATION_HANGUL_SYLLABLE
-        >
-      ];
+    const template = nameTemplates.get(
+      nameDerivation as Exclude<
+        NameDerivationReq,
+        typeof NAME_DERIVATION_HANGUL_SYLLABLE
+      >,
+    );
     if (!template) {
       throw new RangeError(`Invalid name derivation: ${nameDerivation}`);
     }
