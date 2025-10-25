@@ -1,3 +1,6 @@
+/**
+ * A Map that is guaranteed to have a value for every possible key.
+ */
 export interface FullMap<in out K, V> extends ReadonlyMap<K, V> {
   get(key: K): V;
 }
