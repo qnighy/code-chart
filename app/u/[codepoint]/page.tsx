@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 
 import { parseCPNumber, formatCPNumber } from "../cp-number";
 import { CharacterDisplay } from "../CharacterDisplay";
+import { CopyButton } from "../CopyButton";
 import { sanitizeForHtmlSerialization } from "../ArbitraryText.helper";
 import { chunks } from "../../shared";
 import { chunkIndexOf } from "../../lib/ucd/chunk";
@@ -152,12 +153,15 @@ export default async function CodepointPage({
             <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0" />
           )}
 
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 sm:p-12 text-center min-w-[200px] sm:min-w-[400px] min-h-[200px] sm:min-h-[300px] flex items-center justify-center">
-            <CharacterDisplay
-              codePoint={cp}
-              className="text-6xl sm:text-9xl overflow-hidden"
-              replacementClassName="text-gray-400 dark:text-gray-500"
-            />
+          <div className="flex flex-col items-center gap-4">
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 sm:p-12 text-center min-w-[200px] sm:min-w-[400px] min-h-[200px] sm:min-h-[300px] flex items-center justify-center">
+              <CharacterDisplay
+                codePoint={cp}
+                className="text-6xl sm:text-9xl overflow-hidden"
+                replacementClassName="text-gray-400 dark:text-gray-500"
+              />
+            </div>
+            <CopyButton character={character} className="px-4" />
           </div>
 
           {nextCp !== null ? (

@@ -3,6 +3,7 @@
 import { use, useEffect, useRef, Suspense } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { CharacterDisplay } from "./CharacterDisplay";
+import { CopyButton } from "./CopyButton";
 import { formatCPNumber } from "./cp-number";
 import { chunks } from "../shared";
 import { chunkIndexOf } from "../lib/ucd/chunk";
@@ -67,7 +68,7 @@ function CodepointModalContent({
       </div>
 
       {/* Navigation and Character Display */}
-      <div className="flex items-center justify-center gap-2 sm:gap-4 mb-6">
+      <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4">
         <button
           onClick={handlePrevious}
           disabled={prevCp === null}
@@ -93,6 +94,11 @@ function CodepointModalContent({
         >
           <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
         </button>
+      </div>
+
+      {/* Copy Button */}
+      <div className="flex justify-center mb-6">
+        <CopyButton character={character} />
       </div>
 
       {/* Character Information */}
