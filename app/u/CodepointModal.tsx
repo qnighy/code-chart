@@ -55,7 +55,7 @@ function CodepointModalContent({
     <div className="p-6 sm:p-8">
       {/* Header with close button */}
       <div className="flex items-start justify-between mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold pr-8 text-gray-900 dark:text-gray-100">
+        <h2 className="text-2xl sm:text-3xl font-bold pr-8 text-gray-900 dark:text-gray-100 overflow-y-auto flex-1 min-w-0 h-24">
           U+{normalized} {charData.name}
         </h2>
         <button
